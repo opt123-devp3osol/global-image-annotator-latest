@@ -1,0 +1,28 @@
+{
+  "name": "global-image-annotator-backend-server",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "global-image-annotator-backend-server",
+  "main": "global-image-annotator-backend-server.js",
+  "scripts": {
+    "start": "nodemon --inspect --watch backend --exec node --experimental-modules global-image-annotator-backend-server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "express-async-handler": "^1.1.4",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.11",
+    "@types/ws": "^7.4.0",
+    "nodemon": "^2.0.4"
+  },
+  "engines": {
+    "node": "18.16.1",
+    "npm": "9.5.1"
+  }
+}

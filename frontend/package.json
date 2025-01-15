@@ -1,0 +1,29 @@
+{
+  "name": "global-text-editor-lib",
+  "version": "1.0.0",
+  "description": "A reusable text editor library",
+  "main": "dist/global-text-editor-lib.js",
+  "scripts": {
+    "build": "webpack",
+    "start": "webpack serve",
+    "dev": "webpack serve --hot"
+  },
+  "devDependencies": {
+    "css-loader": "^5.2.7",
+    "style-loader": "^3.3.4",
+    "webpack": "^5.95.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.1.0"
+  },
+  "keywords": [
+    "global-text-editor-lib",
+    "text-editor",
+    "javascript",
+    "library"
+  ],
+  "author": "devp23 Mayank",
+  "license": "MIT",
+  "dependencies": {
+    "jquery": "^3.7.1"
+  }
+}

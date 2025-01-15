@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="googlebot" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Global Text Editor</title>
+    <style>
+        .global_text_editor_wrapper{
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            z-index: 99999;
+            background: #fefefe;
+            flex-direction: column;
+            min-height: 300px;
+            display: flex;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            border: none !important;
+        }
+    </style>
+</head>
+<body>
+<!--//////// global_text_editor_wrapper THIS CLASS IS NOT FOR EDITOR USE AVOID USING THIS IN CSS //////////////-->
+<div class="global_text_editor_wrapper">
+    <iframe id="editor_iframe" style="width:100%; height:100%;"></iframe>
+</div>
+<script src="global-image-annotator-lib.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // let options = {
+        //     tools:['text','paragraph', 'font', 'highlight', 'align'],
+        //     width:720
+        // }
+        //TextEditorLib.TextEditor.create('editor_iframe','editor','toolbar','213123-123-fdg',options);
+    });
+</script>
+</body>
+</html>
