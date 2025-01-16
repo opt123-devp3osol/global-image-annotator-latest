@@ -1,12 +1,12 @@
 const path = require('path');
 
 module.exports = {
-    entry: './src/editor.js',
+    entry: './src/ImageAnnotatorMain.js',
     mode: 'development',
     output: {
         filename: 'global-image-annotator-lib.js',
         path: path.resolve(__dirname, 'dist'),
-        library: 'TextEditorLib',
+        library: 'ImageAnnotatorEditorLib',
         libraryTarget: 'umd',
         globalObject: 'this',
     },

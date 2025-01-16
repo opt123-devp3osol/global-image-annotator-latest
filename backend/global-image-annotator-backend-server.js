@@ -4,7 +4,6 @@ import http from 'http';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
-import multer from 'multer';
 
 const app = express();
 app.use(cors());
@@ -48,8 +47,6 @@ const sendMessage = (jsonData, socket) => {
   socket.broadcast.emit("message", jsonData);
 };
 
-
-
 // Setup Socket.IO connection and event listeners
 globalEditorNamespace.on('connection', (socket) => {
   const userID = getUniqueID();
@@ -83,60 +80,16 @@ globalEditorNamespace.on('connection', (socket) => {
   });
 });
 
-// Set storage engine for multer
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    let uploadPath = `${__dirname}/attachments/${req?.query?.docId}/`;
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true });
-      fs.chmodSync(uploadPath, 0o755);
-    }
-    cb(null, uploadPath); // Specify the upload directory
-  },
-  filename: (req, file, cb) => {
-    cb(null, req?.query?.name); // Use the original file name
-  },
-});
 
-const upload = multer({ storage });
-
-// Endpoint for file upload
-app.post('/global-editor-api/actionToUploadEditorAttachmentApiCall', upload.single('image'), (req, res) => {
-  // Handle the uploaded file here.
-  const file = req.file;
-  if (!file) {
-    return res.status(400).send('No file uploaded.');
-  }
-  // You can save the file information or perform other operations here.
-  res.send('File uploaded successfully.');
-});
-
-app.get('/global-editor-api/actionToGetEditorAttachmentApiCall/:docId/:fileId', (req, res) => {
-  const { docId, fileId } = req.params;
-  const filePath = path.join(__dirname, 'attachments/'+docId, fileId);
-
-  // Send the file to the client
-  res.sendFile(filePath, (err) => {
-    if (err) {
-      console.error('Error sending file:', err);
-      res.status(err.status).end();
-    } else {
-      console.log('File sent:', filePath);
-    }
-  });
-});
-
-app.post('/global-editor-api/uploadEditorTestFileApiCall', (req, res) => {
-  const { htmlData,docId } = req.body;
-  if (!htmlData) {
+app.post('/global-editor-api/ationTouploadFabricAnnotatorJsonFileApiCall', (req, res) => {
+  const { jsonStringData,id } = req.body;
+  if (!jsonStringData) {
     return res.status(400).json({ message: 'No text data received' });
   }
-
-
   // Define the path to the file
-  const filePath = path.join(`${__dirname}/editor_docs/editor_doc_${docId}.txt`);
+  const filePath = path.join(`${__dirname}/public_data/fabric_annotation_json_${id}.txt`);
   // Write the text data to the file
-  fs.writeFile(filePath, htmlData, (err) => {
+  fs.writeFile(filePath, jsonStringData, (err) => {
     if (err) {
       console.error('Error writing to file:', err);
       return res.status(500).json({ message: 'Failed to write data to file' });
@@ -145,34 +98,27 @@ app.post('/global-editor-api/uploadEditorTestFileApiCall', (req, res) => {
   });
 });
 
-app.get('/global-editor-api/getEditorTestFileApiCall/:docId', (req, res) => {
-  const { docId } = req.params;
-
-  if (!docId) {
+app.post('/global-editor-api/actionToValidateImageJsonDataAnnotatorApiCall', (req, res) => {
+  const { fabRicJsonObject,imageUniqueName } = req.body;
+  if (!imageUniqueName) {
     return res.status(400).json({ message: 'No doc id data received' });
   }
-
-  const filePath = path.join(`${__dirname}/editor_docs/editor_doc_${docId}.txt`);
-
-  // Check if the file exists
+  let jsonObjectName = `fabric_annotation_json_${imageUniqueName}.txt`;
+  const filePath = path.join(`${__dirname}/public_data/${jsonObjectName}`);
   if (!fs.existsSync(filePath)) {
-    let dataToWrite = `<div data-block-id="block-${docId}" class="content_section_inner_container gl_doc_selectable_div editable_content_section normal_text"></div>`;
-    // If the file doesn't exist, create it with some default content
-    fs.writeFile(filePath, dataToWrite, (err) => {
+    fs.writeFile(filePath, fabRicJsonObject, (err) => {
       if (err) {
         return res.status(500).json({ message: 'Failed to create the file.' });
       }
-
       // Send the created file to the client
-      return res.sendFile(filePath, (err) => {
+      res.sendFile(filePath, (err) => {
         if (err) {
           console.error('Error sending file:', err);
           res.status(500).send('Failed to send the file.');
         }
       });
     });
-  } else {
-    // If the file exists, send it to the client
+  }else{
     res.sendFile(filePath, (err) => {
       if (err) {
         console.error('Error sending file:', err);
@@ -180,6 +126,30 @@ app.get('/global-editor-api/getEditorTestFileApiCall/:docId', (req, res) => {
       }
     });
   }
+});
+
+app.get('/global-editor-api/actionToGetFabricAnnotatorJsonFileApiCall/:id', (req, res) => {
+  const { id } = req.params;
+  if (!id) {
+    return res.status(400).json({ message: 'No doc id data received' });
+  }
+  const filePath = path.join(`${__dirname}/public_data/fabric_annotation_json_${id}.txt`);
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error('Error sending file:', err);
+      res.status(500).send('Failed to send the file.');
+    }
+  });
+});
+
+app.get('/global-editor-api/actionToGetFabricAnnotatorJsonFileTempApiCall', (req, res) => {
+  const filePath = path.join(`${__dirname}/public_data/blank_image_editor_screen.png`);
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error('Error sending file:', err);
+      res.status(500).send('Failed to send the file.');
+    }
+  });
 });
 
 

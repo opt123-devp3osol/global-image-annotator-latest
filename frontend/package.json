@@ -24,6 +24,7 @@
   "author": "devp23 Mayank",
   "license": "MIT",
   "dependencies": {
+    "fabric": "^6.5.4",
     "jquery": "^3.7.1"
   }
 }
