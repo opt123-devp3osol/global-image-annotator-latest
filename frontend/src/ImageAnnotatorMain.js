@@ -155,35 +155,6 @@ export class ImageAnnotatorEditor {
                 .catch(error => {
                     console.error('There was a problem with the fetch operation:', error); // Handle errors
                 });
-
-
-            // Load the image into the Fabric canvas
-            // fabric.Image.fromURL(dataURL, { crossOrigin: imgObj.crossOrigin }).then((img) => {
-            //     const height = img.height;
-            //     const width = img.width;
-            //     // Adjust the Fabric canvas dimensions
-            //     fabricCanvas.setHeight(height);
-            //     fabricCanvas.setWidth(width);
-            //     img.set({
-            //         height: height,
-            //         width: width,
-            //         lockScalingX: true,
-            //         lockScalingY: true,
-            //         id: "main_image",
-            //         backgroundColor: "#main_image",
-            //         left: 0,
-            //         top: 0,
-            //         cornerColor: 'black',
-            //         hasBorders: false,
-            //         borderColor: 'black',
-            //         hasControls: false,
-            //         selectable: false
-            //     }).scale(1);
-            //
-            //     // Add the image to the canvas
-            //     fabricCanvas.add(img);
-            //     fabricCanvas.renderAll();
-            // });
         };
 
         imgObj.onerror = () => {
