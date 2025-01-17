@@ -2,6 +2,7 @@ import {createImageAnnotatorIframe} from "./IframeImageAnnotatorEditor";
 // import {SocketIOManager} from "./SocketIOManager";
 import * as fabric from "fabric";
 import {generateUniqueIdForBlock, getInitialFabricDoxData} from "./AnnotatorEditorHelper";
+import {createToolbar} from "./toolbar";
 
 const optionsForWebSocket = {
     reconnectInterval: 5000,  // 5 seconds reconnect interval
@@ -56,7 +57,7 @@ export class ImageAnnotatorEditor {
         }
     }
 
-    setupEditorAndToolbarOtherFunctions(){
+    setupEditorAndToolbarOtherFunctions(options){
         // Initialize the Fabric.js canvas
         fabricCanvas = new fabric.Canvas(this.iframeDocument.getElementById('rc_editor_image_canvas'));
         // Disable selection for objects
@@ -65,6 +66,21 @@ export class ImageAnnotatorEditor {
         /////////// SETUP EDITOR AND OTHER FUNCTIONS /////////////
         this.setImageIntoImageAnnotator('blank_image_editor_screen.png','https://backend.timebox.ai/global-editor-api/actionToGetFabricAnnotatorJsonFileTempApiCall');
         /////////// SETUP EDITOR AND OTHER FUNCTIONS /////////////
+        const editorRect = this.editor.getBoundingClientRect();
+        if(this.toolbar) {
+            const toolbarRect = this.toolbar.getBoundingClientRect();
+            ///////////// ATTACH TOOLBAR INTO DOM //////////
+            if (toolbarRect.bottom <= editorRect.top) {
+                this.toolbar.classList.add('ge_above_the_editor');
+            } else if (toolbarRect.top >= editorRect.bottom) {
+                this.toolbar.classList.add('ge_below_the_editor');
+            } else {
+                this.toolbar.classList.add('ge_above_the_editor');
+            }
+            const tools = options?.tools ? options?.tools : [];
+            createToolbar(this.toolbar, tools);
+            ///////////// ATTACH TOOLBAR INTO DOM //////////
+        }
     }
 
 
