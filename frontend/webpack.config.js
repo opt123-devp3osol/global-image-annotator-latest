@@ -16,16 +16,23 @@ module.exports = {
                 test: /\.css$/,
                 use: ['style-loader', 'css-loader'],
             },
+            {
+                test: /\.(png|jpg|jpeg|gif)$/i,
+                type: 'asset/resource', // Using built-in asset module instead of file-loader
+                generator: {
+                    filename: 'assets/[name].[hash][ext][query]', // Output path for images
+                },
+            },
         ],
     },
     devServer: {
         static: {
-            directory: path.join(__dirname, 'dist'), // Serve static files from 'dist'
+            directory: path.join(__dirname, 'dist'), // Serving static files from 'dist'
         },
-        compress: true, // Enable gzip compression
-        port: 9000, // Change to your desired port
-        open: true, // Automatically open the browser
-        hot: true, // Enable hot module replacement
-        historyApiFallback: true, // For single-page applications
+        compress: true,
+        port: 9000,
+        open: true, // Open browser automatically
+        hot: true,  // Enable hot module replacement
+        historyApiFallback: true,
     },
 };

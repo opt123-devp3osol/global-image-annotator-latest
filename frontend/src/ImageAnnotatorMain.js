@@ -3,7 +3,12 @@ import {createImageAnnotatorIframe} from "./IframeImageAnnotatorEditor";
 import * as fabric from "fabric";
 import {generateUniqueIdForBlock, getInitialFabricDoxData} from "./AnnotatorEditorHelper";
 import {createToolbar} from "./toolbar";
-
+import {
+    changeObjectSelection,
+    drawLineArrow,
+    drawObjectInCanvas,
+    infiniteCanvasProperties
+} from "./EditorToolbarAnnotationLiberary";
 const optionsForWebSocket = {
     reconnectInterval: 5000,  // 5 seconds reconnect interval
     heartbeatInterval: 15000, // 15 seconds heartbeat interval
@@ -81,9 +86,26 @@ export class ImageAnnotatorEditor {
             createToolbar(this.toolbar, tools);
             ///////////// ATTACH TOOLBAR INTO DOM //////////
         }
+        let currentCu = this;
+        setTimeout(function () {
+            if(currentCu.toolbar) {
+                currentCu.setupToolbar();
+            }
+        }, 0)
     }
 
 
+    setupToolbar() {
+        this.toolbar.querySelectorAll('.global_image_annotator_toolbar_click').forEach((element) => {
+            element.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                let toolId = e.target.closest('.global_image_annotator_toolbar_click').dataset.id;
+                if(toolId){
+                  drawObjectInCanvas(toolId,fabricCanvas);
+                }
+            });
+        });
+    }
     setImageIntoImageAnnotator(imageUniqueName,imageUrl) {
 
         const getImageDataUrl = (img) => {
@@ -148,18 +170,48 @@ export class ImageAnnotatorEditor {
                             fabricCanvas.renderAll();
                             // Iterate over objects to customize behavior
                             fabricCanvas.getObjects().forEach(obj => {
-                                if(obj.backgroundColor === '#main_image'){
+                                if(obj.id === 'main_image'){
                                     obj.selectable = false;
                                     obj.hasControls = false;
                                     obj.hasBorders = false;
+                                }else if(obj.shapeName === 'circle'){
+                                    obj.selectable = true;
+                                    obj.setControlsVisibility({
+                                        mb:false,
+                                        mt:false,
+                                        mtr:false
+                                    });
                                 }
+                                else if(obj.shapeName === 'blur'){
+                                    obj.setControlsVisibility({
+                                        mt: false,
+                                        mb: false,
+                                        ml: false,
+                                        mr: false,
+                                        tr: false,
+                                        tl: false,
+                                        br: false,
+                                        mtr:false,
+                                        bl: false
+                                    });
+                                }else if(obj.shapeName === 'arrow'){
+                                    obj.setControlsVisibility({
+                                        mt: false,
+                                        mb: false,
+                                        ml: false,
+                                        mr: false,
+                                        br: false,
+                                        tl: false,
+                                        //mtr: false,
+                                    });
+                                } else {obj.selectable = true;}
                             });
-                            // Enable drawing mode
-                            fabricCanvas.isDrawingMode = true;
-                            // Configure brush settings
-                            fabricCanvas.freeDrawingBrush = new fabric.PencilBrush(fabricCanvas);
-                            fabricCanvas.freeDrawingBrush.color = 'red'; // Set brush color
-                            fabricCanvas.freeDrawingBrush.width = 3; // Set brush width (in pixels)
+                            changeObjectSelection(false, fabricCanvas);
+                            infiniteCanvasProperties(fabricCanvas);
+                            drawLineArrow(fabricCanvas);
+                            // Create a Fabric.js Pattern from the image
+                            //fabricCanvas.backgroundColor = '#ffffff';
+                            // Set the pattern as the background of the canvas
                             fabricCanvas.renderAll();
                         });
 
