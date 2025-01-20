@@ -147,7 +147,7 @@ export function createToolbar(toolbar,tools = []) {
         <div class="global_editor_button_group event_group_tool">
             <div class="tool_bar_wrap">
                 <button type="button" class="global_editor_button global_image_annotator_toolbar_click" tabindex="-1" data-id="number">
-                  <svg width="20" height="20" viewBox="0 0 20 20"><path d="M10,0A10,10,0,1,0,20,10,10,10,0,0,0,10,0Zm0,18.125A8.125,8.125,0,1,1,18.125,10,8.125,8.125,0,0,1,10,18.125Z"/><path className="a" d="M118.589,80.39h-1.58a.851.851,0,0,0-.756.91.819.819,0,0,0,.756.91h.5v5.9a.912.912,0,1,0,1.823,0V81.246A.761.761,0,0,0,118.589,80.39Z" transform="translate(-108.109 -74.722)"/></svg>
+                  <svg width="20" height="20" viewBox="0 0 20 20"><path d="M10,0A10,10,0,1,0,20,10,10,10,0,0,0,10,0Zm0,18.125A8.125,8.125,0,1,1,18.125,10,8.125,8.125,0,0,1,10,18.125Z"/><path class="a" d="M118.589,80.39h-1.58a.851.851,0,0,0-.756.91.819.819,0,0,0,.756.91h.5v5.9a.912.912,0,1,0,1.823,0V81.246A.761.761,0,0,0,118.589,80.39Z" transform="translate(-108.109 -74.722)"/></svg>
                 </button>
                 <div class="ge_tooltip_wrapper"><span class="hover_ele_type">Number</span></div>
             </div>

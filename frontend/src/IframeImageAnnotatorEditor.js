@@ -5,7 +5,7 @@ export function createImageAnnotatorIframe(iframeDocument, editorId, toolbarId, 
 
     const getPositionAnnotatorToolbar = ()=>{
         if(isToolBarAtBottom) {
-            return `<div className={"preview-container"} id="${editorId}">
+            return `<div class={"preview-container"} id="${editorId}">
                        <canvas id="rc_editor_image_canvas"></canvas>
                     </div>
                     <div id="${toolbarId}" class="gie_toolbar_main_container"></div>`

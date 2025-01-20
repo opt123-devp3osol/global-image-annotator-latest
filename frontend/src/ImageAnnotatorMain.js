@@ -29,7 +29,6 @@ export class ImageAnnotatorEditor {
 
             // Access the iframe's document
             this.iframeDocument = this.iframe?.contentDocument || this.iframe?.contentWindow.document;
-            mainEditorDocumentId = documentId;
             // Access the iframe's document
             if (this.iframeDocument) {
                 createImageAnnotatorIframe(this.iframeDocument, editorId, toolbarId,options?.isToolBarAtBottom);
@@ -106,8 +105,9 @@ export class ImageAnnotatorEditor {
             });
         });
     }
-    setImageIntoImageAnnotator(imageUniqueName,imageUrl) {
 
+    setImageIntoImageAnnotator(imageUniqueName,imageUrl) {
+        mainEditorDocumentId = `fabric_annotation_json_${imageUniqueName}`;
         const getImageDataUrl = (img) => {
             // Create an offscreen canvas
             const canvas = document.createElement('canvas');
@@ -139,7 +139,7 @@ export class ImageAnnotatorEditor {
             const height = loadedImage.naturalHeight;
             const width = loadedImage.naturalWidth;
 
-            fetch(baseServerUrl + '/actionToValidateImageJsonDataAnnotatorApiCall/', {
+            fetch(baseServerUrl + '/actionToValidateImageJsonDataAnnotatorApiCall', {
                 method: 'POST', // Use POST method
                 headers: {
                     'Content-Type': 'application/json' // Set content type for JSON
@@ -209,10 +209,15 @@ export class ImageAnnotatorEditor {
                             changeObjectSelection(false, fabricCanvas);
                             infiniteCanvasProperties(fabricCanvas);
                             drawLineArrow(fabricCanvas);
-                            // Create a Fabric.js Pattern from the image
-                            //fabricCanvas.backgroundColor = '#ffffff';
-                            // Set the pattern as the background of the canvas
-                            fabricCanvas.renderAll();
+                            fabric.Image.fromURL('./assets/canvas_background_texture.png', ({})).then((img) => {
+                                // Set the background pattern of the canvas
+                                //fabricCanvas.setBackgroundColor({ source: pattern }, fabricCanvas.renderAll.bind(fabricCanvas));
+                                fabricCanvas.backgroundColor = new fabric.Pattern({
+                                    source: img.getElement(),
+                                    repeat: 'repeat', // Set the pattern to repeat
+                                });
+                                fabricCanvas.renderAll();
+                            });
                         });
 
                     } catch (error) {
