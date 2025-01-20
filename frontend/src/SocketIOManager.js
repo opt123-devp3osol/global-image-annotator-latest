@@ -1,5 +1,5 @@
-import io from 'socket.io-client'; // Import Socket.IO client
-import { updatePreviewDocDataLiveEditing } from "./editorHelperFunction";
+import io from 'socket.io-client';
+import {updatePreviewDocDataLiveEditing} from "./AnnotatorEditorHelper"; // Import Socket.IO client
 
 export class SocketIOManager {
     constructor(editor, mainEditorDocumentId, options = {}) {
@@ -94,7 +94,7 @@ export class SocketIOManager {
     // Handle incoming Socket.IO messages
     onMessage(data) {
         switch (data?.type) {
-            case 'updateDocPreviewPanel':
+            case 'actionToUpdateImageAnnotatorDoc':
                 if (data.payload !== undefined) {
                     updatePreviewDocDataLiveEditing(data.payload);
                 }

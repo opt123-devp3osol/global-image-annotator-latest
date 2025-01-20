@@ -66,7 +66,6 @@ globalEditorNamespace.on('connection', (socket) => {
       const jsonData = JSON.parse(jsonString);
 
       const { mainEditorDocumentId } = jsonData; // Assuming messages have a channel ID
-
       // Send the message to everyone else in the room (except the sender)
       socket.to(mainEditorDocumentId).emit('message', binaryMessage);
     } catch (error) {

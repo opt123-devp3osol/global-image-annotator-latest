@@ -1,4 +1,6 @@
 import * as fabric from "fabric";
+import {sendUpdateRequestForLiveEditing} from "./AnnotatorEditorHelper";
+import {editorUserData, mainEditorDocumentId} from "./ImageAnnotatorMain";
 
 let drawActive = false;
 let selectedToolColor = '#FF0000';
@@ -9,11 +11,11 @@ let pathShapeName = 'path';
 let digit = 1;
 let caseType = '';
 let alphabetNo = 0;
-let ipAddress,captureId,custom_editor_id,userId;
 let strokeSize = 4;
 let onLoad = true;
 let selectedFontSize = 22;
 let alphabetArray = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','x','y','z'];
+let arrayOfActions = [];
 
 let Direction = {
     LEFT: 0,
@@ -22,25 +24,167 @@ let Direction = {
     DOWN: 3
 };
 
-// Save additional attributes in Serialization
-fabric.Object.prototype.toObject = (function (toObject) {
-    return function (properties) {
-        console.log('Custom toObject is called'); // Debugging
-        return fabric.util.object.extend(toObject.call(this, properties), {
-            id: this.id,
-            userId: this.userId,
-            customEditorId: this.customEditorId,
-            shapeName: this.shapeName,
-            lastModifiedTime: this.lastModifiedTime
-        });
-    };
-})(fabric.Object.prototype.toObject);
-
 export function removeEvents(selected_canvas) {
     selected_canvas.selection = false;
     selected_canvas.off('mouse:down');
     selected_canvas.off('mouse:up');
     selected_canvas.off('mouse:move');
+}
+
+export function drawObjectInCanvas(id, selectedCanvas){
+    let activeObjectElement= selectedCanvas.getActiveObject();
+
+    if (activeObjectElement && typeof activeObjectElement !== "undefined" && activeObjectElement.shapeName === 'text' && activeObjectElement.isEditing){
+        activeObjectElement.exitEditing();
+    }
+
+    changeObjectSelection(false, selectedCanvas);
+
+    // Changing cursor of canvas brush
+    // $(".modal_screenshot_image").removeClass('modal_screenshot_image_cursor_move');
+    // $(".modal_screenshot_image").addClass('modal_screenshot_image_cursor_crosshair');
+    // eventBus.dispatch('call-function-to-selection-tool-active',false);
+    // Changing cursor of canvas brush
+    selectedCanvas.isDrawingMode = true;
+    selectedCanvas.freeDrawingBrush = new fabric.PencilBrush(selectedCanvas);
+    selectedCanvas.freeDrawingBrush.color = "#f1f1f100";
+    selectedCanvas.freeDrawingBrush.width = 0;
+    drawActive = false;
+    let lastElement = null;
+
+    switch(id){
+        case 'draw':
+            drawActive = true;
+            selectedCanvas.isDrawingMode = true;
+            selectedCanvas.freeDrawingBrush = new fabric.PencilBrush(selectedCanvas);
+            selectedCanvas.freeDrawingBrush.width = Number(selectedToolStroke);
+            selectedCanvas.freeDrawingBrush.color = selectedToolColor;
+            enableFreeDrawing(selectedCanvas,'free draw');
+            break;
+        case 'select':
+            removeEvents(selectedCanvas);
+            selectedCanvas.isDrawingMode = false;
+            //Changing cursor of canvas brush
+            // $(".modal_screenshot_image").addClass('modal_screenshot_image_cursor_move');
+            // $(".modal_screenshot_image").removeClass('modal_screenshot_image_cursor_crosshair');
+            changeObjectSelection(true, selectedCanvas);
+            // eventBus.dispatch('call-function-to-selection-tool-active',true);
+            break;
+        case 'addImage':
+            removeEvents(selectedCanvas);
+            break;
+        case 'undo':
+            removeEvents(selectedCanvas);
+            if(selectedCanvas._objects.length > 0){
+                if(selectedCanvas._objects[selectedCanvas._objects.length - 1].id !== 'main_image') {
+                    selectedCanvas.isDrawingMode = false;
+                    lastElement = selectedCanvas._objects[selectedCanvas._objects.length - 1];
+                    arrayOfActions.push(lastElement);
+                    selectedCanvas.remove(lastElement);
+                    selectedCanvas.renderAll();
+                    selectedCanvas.selection = false;
+                }
+            }
+            break;
+        case 'redo':
+            removeEvents(selectedCanvas);
+            if(arrayOfActions.length > 0){
+                lastElement = arrayOfActions.pop();
+                selectedCanvas.add(lastElement);
+                selectedCanvas.renderAll();
+                selectedCanvas.selection = false;
+            }
+            break;
+        case 'clear':
+            if(selectedCanvas._objects.length > 1){
+                selectedCanvas.forEachObject(function(obj){ if(obj.id !== 'main_image') { selectedCanvas.remove(obj)} });
+                selectedCanvas.selection = false;
+            }
+            digit = 1;
+            alphabetNo = 0;
+            break;
+        case 'crop':
+            changeObjectSelection(false, selectedCanvas);
+            drawCrop(selectedCanvas);
+            break;
+        case 'rectangle':
+            changeObjectSelection(false, selectedCanvas);
+            drawRectangle(selectedCanvas);
+            break;
+        case 'triangle':
+            changeObjectSelection(false, selectedCanvas);
+            drawTriangle(selectedCanvas);
+            break;
+        case 'circle':
+            changeObjectSelection(false, selectedCanvas);
+            drawCircle(selectedCanvas);
+            break;
+        case 'arrow':
+            changeObjectSelection(false, selectedCanvas);
+            drawLineArrow(selectedCanvas);
+            break;
+        case 'double-headed-arrow':
+            changeObjectSelection(false, selectedCanvas);
+            drawDoubleEndedArrow(selectedCanvas);
+            break;
+        case 'line':
+            changeObjectSelection(false, selectedCanvas);
+            drawLine(selectedCanvas);
+            break;
+        case 'arrow-line':
+            changeObjectSelection(false, selectedCanvas);
+            drawLine(selectedCanvas);
+            break;
+        case 'ellipse':
+            changeObjectSelection(false, selectedCanvas);
+            drawEllipse(selectedCanvas);
+            break;
+        case 'text':
+            changeObjectSelection(false, selectedCanvas);
+            addTextField(selectedCanvas);
+            break;
+        case 'number':
+            changeObjectSelection(false, selectedCanvas);
+            addNumberInCanvas(selectedCanvas);
+            break;
+        case 'alphabet':
+            changeObjectSelection(false, selectedCanvas);
+            addAlphabetInCanvas(selectedCanvas);
+            break;
+        case 'highlighter':
+            changeObjectSelection(false, selectedCanvas);
+            highlightInCanvas(selectedCanvas);
+            break;
+        case 'blur':
+            changeObjectSelection(false, selectedCanvas);
+            highlightBlurInCanvas(selectedCanvas);
+            break;
+        case 'speech-bubbles':
+            changeObjectSelection(false, selectedCanvas);
+            speechBubbleInCanvas(selectedCanvas);
+            break;
+        case 'speech-bubble':
+            changeObjectSelection(false, selectedCanvas);
+            speechBubbleInCanvasOnMouseMove(selectedCanvas);
+            break;
+        case 'polygon':
+            changeObjectSelection(false, selectedCanvas);
+            drawPolygonInCanvas(selectedCanvas);
+            break;
+        // case 'circle-brush':
+        //     changeObjectSelection(false, selectedCanvas);
+        //     drawCircleBrushInCanvas(selectedCanvas);
+        //     break;
+        // case 'remove':
+        //     //Changing cursor of canvas brush
+        //     $(".modal_screenshot_image").addClass('modal_screenshot_image_cursor_move');
+        //     $(".modal_screenshot_image").removeClass('modal_screenshot_image_cursor_crosshair');
+        //     changeObjectSelection(true, selectedCanvas);
+        //     $(actionToolClass+"[data-id='select']").addClass('active');
+        //     $(this).removeClass('active');
+        //     removeObjectFromCanvas(selectedCanvas);
+        //     break;
+    }
 }
 
 export function enableFreeDrawing(selected_canvas,shapeName){
@@ -60,13 +204,7 @@ export function enableFreeDrawing(selected_canvas,shapeName){
 }
 
 export function changeObjectSelection(value, fabricCanvas) {
-    if(value){
-        // $(".modal_screenshot_image").addClass('modal_screenshot_image_cursor_move');
-        // $(".modal_screenshot_image").removeClass('modal_screenshot_image_cursor_crosshair');
-    }else{
-        fabricCanvas._activeObject = null;
-    }
-
+    fabricCanvas._activeObject = null;
     fabricCanvas.forEachObject(function (obj) {
         if (obj.stroke === '#f1f1f100') {
             fabricCanvas.remove(obj);
@@ -220,9 +358,9 @@ function drawRectangle(selected_canvas) {
             stroke: selectedToolColor,
             noScaleCache: false,
             strokeUniform: true,
-            id:'rectangle'+new Date().getTime()+Math.random().toString(36).substr(2,8)+userId,
-            userId: userId,
-            customEditorId:custom_editor_id,
+            id:'rectangle'+new Date().getTime()+Math.random().toString(36).substr(2,8)+editorUserData?.id,
+            userId: editorUserData?.id,
+            customEditorId:mainEditorDocumentId,
             shapeName:'rectangle',
             lastModifiedTime:new Date(),
             selectable:true,
@@ -275,7 +413,9 @@ function drawRectangle(selected_canvas) {
             selected_canvas.remove(rect);
         }else{
             selected_canvas.setActiveObject(rect);
-            //eventBus.dispatch('send-to-websocket-fabric',{type:'add',userPointer:rect,resize:true});
+            //////// WEBSOCKET REQUEST //////////
+            sendUpdateRequestForLiveEditing({type:'ADD_ANNOTATOR_OBJECT',object:rect})
+            //////// WEBSOCKET REQUEST //////////
         }
         selected_canvas.renderAll();
     });
@@ -304,9 +444,9 @@ function drawTriangle(selected_canvas) {
             stroke: selectedToolColor,
             noScaleCache: false,
             strokeUniform: true,
-            id:'triangle'+new Date().getTime()+Math.random().toString(36).substr(2,8)+userId,
-            userId: userId,
-            customEditorId:custom_editor_id,
+            id:'triangle'+new Date().getTime()+Math.random().toString(36).substr(2,8)+editorUserData?.id,
+            userId: editorUserData?.id,
+            customEditorId:mainEditorDocumentId,
             shapeName:'triangle',
             lastModifiedTime:new Date(),
             selectable:true,
@@ -392,7 +532,9 @@ function drawTriangle(selected_canvas) {
             selected_canvas.remove(tri);// removing old object
         }else{
             selected_canvas.setActiveObject(tri);
-            //eventBus.dispatch('send-to-websocket-fabric',{type:'add',userPointer:tri,resize:true});
+            //////// WEBSOCKET REQUEST //////////
+            sendUpdateRequestForLiveEditing({type:'ADD_ANNOTATOR_OBJECT',object:tri})
+            //////// WEBSOCKET REQUEST //////////
         }
         selected_canvas.renderAll();
     });
@@ -412,9 +554,9 @@ function drawCircle(selected_canvas) {
             radius: 0,
             noScaleCache: false,
             strokeUniform: true,
-            id: 'circle' + new Date().getTime() + Math.random().toString(36).substr(2, 8) + userId,
-            userId: userId,
-            customEditorId: custom_editor_id,
+            id: 'circle' + new Date().getTime() + Math.random().toString(36).substr(2, 8) + editorUserData?.id,
+            userId: editorUserData?.id,
+            customEditorId: mainEditorDocumentId,
             fill: '',
             strokeWidth: selectedToolStroke,
             stroke: selectedToolColor,
@@ -470,7 +612,9 @@ function drawCircle(selected_canvas) {
                 mtr:false});
             circle.setCoords();
             selected_canvas.setActiveObject(circle);
-            //eventBus.dispatch('send-to-websocket-fabric',{type:'add',userPointer:circle,resize:true});
+            //////// WEBSOCKET REQUEST //////////
+            sendUpdateRequestForLiveEditing({type:'ADD_ANNOTATOR_OBJECT',object:circle})
+            //////// WEBSOCKET REQUEST //////////
         }
         selected_canvas.renderAll();
     });
@@ -594,9 +738,9 @@ export function drawLineArrow(selected_canvas){
         if (!isDown) return;
         isDown = false;
         let group = new fabric.Group([triangle,triangle2], {
-                id:'line-arrow'+new Date().getTime()+Math.random().toString(36).substr(2,8)+userId,
-                userId: userId,
-                customEditorId:custom_editor_id,
+                id:'line-arrow'+new Date().getTime()+Math.random().toString(36).substr(2,8)+editorUserData?.id,
+                userId: editorUserData?.id,
+                customEditorId:mainEditorDocumentId,
                 shapeName:'arrow',
                 lastModifiedTime:new Date(),
                 selectable:true,
@@ -631,8 +775,9 @@ export function drawLineArrow(selected_canvas){
         }else {
             canvas.add(group);
             canvas.setActiveObject(group);
-            //canvas.isDrawingMode = false;
-            //eventBus.dispatch('send-to-websocket-fabric', {type: 'add', userPointer: group});
+            //////// WEBSOCKET REQUEST //////////
+            sendUpdateRequestForLiveEditing({type:'ADD_ANNOTATOR_OBJECT',object:group})
+            //////// WEBSOCKET REQUEST //////////
         }
     });
 
@@ -758,9 +903,9 @@ export function drawDoubleEndedArrow(selected_canvas) {
         isDown = false;
         let group = new fabric.Group([line,triangle2,triangle],
             {
-                id:'double-headed-arrow'+new Date().getTime()+Math.random().toString(36).substr(2,8)+userId,
-                userId: userId,
-                customEditorId:custom_editor_id,
+                id:'double-headed-arrow'+new Date().getTime()+Math.random().toString(36).substr(2,8)+editorUserData?.id,
+                userId: editorUserData?.id,
+                customEditorId:mainEditorDocumentId,
                 shapeName:'double headed arrow',
                 lastModifiedTime:new Date(),
                 selectable:true,
@@ -784,7 +929,9 @@ export function drawDoubleEndedArrow(selected_canvas) {
         }else {
             canvas.add(group);
             canvas.setActiveObject(group);
-            //eventBus.dispatch('send-to-websocket-fabric', {type: 'add', userPointer: group});
+            //////// WEBSOCKET REQUEST //////////
+            sendUpdateRequestForLiveEditing({type:'ADD_ANNOTATOR_OBJECT',object:group})
+            //////// WEBSOCKET REQUEST //////////
         }
     });
 }
@@ -805,9 +952,9 @@ function drawLine(selected_canvas) {
             originY: 'top',
             noScaleCache: false,
             strokeUniform: true,
-            id:'line'+new Date().getTime()+Math.random().toString(36).substr(2,8)+userId,
-            userId: userId,
-            customEditorId:custom_editor_id,
+            id:'line'+new Date().getTime()+Math.random().toString(36).substr(2,8)+editorUserData?.id,
+            userId: editorUserData?.id,
+            customEditorId:mainEditorDocumentId,
             shapeName:'line',
             lastModifiedTime:new Date(),
             selectable:true,
@@ -838,7 +985,9 @@ function drawLine(selected_canvas) {
             selected_canvas.remove(line);// removing old object
         }else{
             selected_canvas.setActiveObject(line);
-            //eventBus.dispatch('send-to-websocket-fabric',{type:'add',userPointer:line,resize:true});
+            //////// WEBSOCKET REQUEST //////////
+            sendUpdateRequestForLiveEditing({type:'ADD_ANNOTATOR_OBJECT',object:line})
+            //////// WEBSOCKET REQUEST //////////
         }
         selected_canvas.renderAll();
     });
@@ -863,9 +1012,9 @@ function drawEllipse(selected_canvas){
             originX: 'left', originY: 'top',
             rx: 0,
             ry: 0,
-            id:'ellipse'+new Date().getTime()+Math.random().toString(36).substr(2,8)+userId,
-            userId: userId,
-            customEditorId:custom_editor_id,
+            id:'ellipse'+new Date().getTime()+Math.random().toString(36).substr(2,8)+editorUserData?.id,
+            userId: editorUserData?.id,
+            customEditorId:mainEditorDocumentId,
             shapeName:'ellipse',
             lastModifiedTime:new Date(),
             selectable:true,
@@ -907,7 +1056,9 @@ function drawEllipse(selected_canvas){
             selected_canvas.remove(ellipse);
         }else{
             selected_canvas.setActiveObject(ellipse);
-            //eventBus.dispatch('send-to-websocket-fabric',{type:'add',userPointer:ellipse,resize:true});
+            //////// WEBSOCKET REQUEST //////////
+            sendUpdateRequestForLiveEditing({type:'ADD_ANNOTATOR_OBJECT',object:ellipse})
+            //////// WEBSOCKET REQUEST //////////
         }
         selected_canvas.renderAll();
 
@@ -945,7 +1096,7 @@ export function addTextField(selected_canvas) {
 
         itext = new fabric.Textbox('', {
             id: `text-${Date.now()}-${Math.random().toString(36).substr(2, 8)}`,
-            userId: userId,
+            userId: editorUserData?.id,
             shapeName: 'text',
             lastModifiedTime: new Date(),
             fontFamily: selectedTextStyle,
@@ -1080,9 +1231,9 @@ function addNumberInCanvas(selected_canvas) {
             hasRotatingPoint: false,
             object_id: 'number',
             shadow: shadow,
-            id: 'number' + new Date().getTime() + Math.random().toString(36).substr(2, 8) + userId,
-            userId: userId,
-            customEditorId: custom_editor_id,
+            id: 'number' + new Date().getTime() + Math.random().toString(36).substr(2, 8) + editorUserData?.id,
+            userId: editorUserData?.id,
+            customEditorId: mainEditorDocumentId,
             shapeName: 'number',
             lastModifiedTime: new Date(),
             selectable: true,
@@ -1115,7 +1266,9 @@ function addNumberInCanvas(selected_canvas) {
         digit++;
 
         // Dispatch an event if needed
-        // eventBus.dispatch('send-to-websocket-fabric', { type: 'add', userPointer: group });
+        //////// WEBSOCKET REQUEST //////////
+        sendUpdateRequestForLiveEditing({type:'ADD_ANNOTATOR_OBJECT',object:group})
+        //////// WEBSOCKET REQUEST //////////
     });
 }
 
@@ -1188,7 +1341,7 @@ function addAlphabetInCanvas(selected_canvas) {
 
         // Create a group with the shapes and text
         group = new fabric.Group([triangle, circle, iText], {
-            id: 'alphabet' + new Date().getTime() + Math.random().toString(36).substr(2, 8) + userId,
+            id: 'alphabet' + new Date().getTime() + Math.random().toString(36).substr(2, 8) + editorUserData?.id,
             left: origX - 32,
             top: origY - 36,
             fill: selectedToolColor,
@@ -1198,8 +1351,8 @@ function addAlphabetInCanvas(selected_canvas) {
             strokeWidth: 30,
             stroke: selectedToolColor,
             object_id: 'alphabet', // Custom property
-            userId: userId,
-            customEditorId: custom_editor_id,
+            userId: editorUserData?.id,
+            customEditorId: mainEditorDocumentId,
             shapeName: 'alphabet',
             lastModifiedTime: new Date(),
             selectable: true,
@@ -1232,7 +1385,9 @@ function addAlphabetInCanvas(selected_canvas) {
         alphabetNo = alphabetNo === 25 ? 0 : alphabetNo + 1;
 
         // Optionally dispatch an event
-        // eventBus.dispatch('send-to-websocket-fabric', { type: 'add', userPointer: group });
+        //////// WEBSOCKET REQUEST //////////
+        sendUpdateRequestForLiveEditing({type:'ADD_ANNOTATOR_OBJECT',object:group})
+        //////// WEBSOCKET REQUEST //////////
     });
 }
 
@@ -1257,9 +1412,9 @@ function highlightInCanvas(selected_canvas){
             angle: 0,
             fill: selectedToolColor,
             opacity:0.34,
-            userId: userId,
-            id:'highlight'+new Date().getTime()+Math.random().toString(36).substr(2,8)+userId,
-            customEditorId:custom_editor_id,
+            userId: editorUserData?.id,
+            id:'highlight'+new Date().getTime()+Math.random().toString(36).substr(2,8)+editorUserData?.id,
+            customEditorId:mainEditorDocumentId,
             shapeName:'highlight',
             lastModifiedTime:new Date(),
             selectable:true,
@@ -1308,17 +1463,20 @@ function highlightInCanvas(selected_canvas){
             selected_canvas.remove(rect);// removing old object
         }else{
             selected_canvas.setActiveObject(rect);
-            //eventBus.dispatch('send-to-websocket-fabric',{type:'add',userPointer:rect,resize:true});
+            //////// WEBSOCKET REQUEST //////////
+            sendUpdateRequestForLiveEditing({type:'ADD_ANNOTATOR_OBJECT',object:rect})
+            //////// WEBSOCKET REQUEST //////////
         }
         selected_canvas.renderAll();
     });
 
 }
 
-function highlightBlurInCanvas(selected_canvas){
+function highlightBlurInCanvas(selected_canvas) {
     let rect, isDown, origX, origY;
     removeEvents(selected_canvas);
-    selected_canvas.on('mouse:down', function(o) {
+
+    selected_canvas.on('mouse:down', function (o) {
         isDown = true;
         let pointer = selected_canvas.getPointer(o.e);
         origX = pointer.x;
@@ -1328,115 +1486,74 @@ function highlightBlurInCanvas(selected_canvas){
             top: origY,
             originX: 'left',
             originY: 'top',
-            noScaleCache: false,
-            stroke:'#5E5E5E',
-            strokeWidth:2,
-            width: pointer.x - origX,
-            height: pointer.y - origY,
-            angle: 0,
-            fill: '#ffffff',
-            opacity:0.3,
-            userId: userId,
-            id:'blur'+new Date().getTime()+Math.random().toString(36).substr(2,8)+userId,
-            customEditorId:custom_editor_id,
-            shapeName:'blur',
-            lastModifiedTime:new Date(),
-            selectable:true,
-            hasControls:true,
-            borderColor:'#5E5E5E',
-            hasBorders:true,
-            cornerStyle:'circle',
-            cornerSize:10,
-            cornerColor:'#0E9AEF',
-            padding:0,
-            LockRotation: true,
-            transparentCorners:false,
+            stroke: '#5E5E5E',
+            strokeWidth: 2,
+            fill: 'rgba(255, 255, 255, 0.3)',
+            width: 0,
+            height: 0,
+            selectable: false,
         });
         selected_canvas.add(rect);
     });
 
-    selected_canvas.on('mouse:move', function(o) {
+    selected_canvas.on('mouse:move', function (o) {
         if (!isDown) return;
         let pointer = selected_canvas.getPointer(o.e);
-        if (origX > pointer.x) {
-            rect.set({
-                left: (pointer.x)
-            });
-        }
-        if (origY > pointer.y) {
-            rect.set({
-                top: (pointer.y)
-            });
-        }
-
         rect.set({
-            width: Math.abs(origX - pointer.x)
+            width: Math.abs(pointer.x - origX),
+            height: Math.abs(pointer.y - origY),
+            left: Math.min(pointer.x, origX),
+            top: Math.min(pointer.y, origY),
         });
-        rect.set({
-            height: Math.abs(origY - pointer.y)
-        });
-
         selected_canvas.renderAll();
     });
 
-    selected_canvas.on('mouse:up', function() {
+    selected_canvas.on('mouse:up', function () {
         if (!isDown) return;
         isDown = false;
         rect.setCoords();
-        if(rect.height === 0 && rect.width === 0){
-            selected_canvas.remove(rect);// removing old object
-        }else{
-            const copiedCanvas = selected_canvas.toCanvasElement();
 
-            const blurredImage = new fabric.Image(copiedCanvas,{
-                userId: rect.userId,
-                id:rect.id,
-                customEditorId:rect.custom_editor_id,
-                shapeName:rect.shapeName,
-                lastModifiedTime:new Date(),
-                cropX:  rect.left,
-                cropY:  rect.top,
-                width: rect.width,
-                height: rect.height,
-                left: rect.left,
-                top: rect.top,
-                scaleX:1,
-                scaleY:1,
-                borderColor:'#5E5E5E',
-                hasBorders:true,
-                cornerStyle:'circle',
-                cornerSize:10,
-                cornerColor:'#0E9AEF',
-                LockRotation: true,
-                lockMovementX : true,
-                lockMovementY : true
-            },{crossOrigin: "anonymous"});
-
-            const filter = new fabric.Image.filters.Blur({
-                blur: 0.2
-            });
-            blurredImage.filters.push(filter);
-            blurredImage.setControlsVisibility({
-                mt: false,
-                mb: false,
-                ml: false,
-                mr: false,
-                tr: false,
-                tl: false,
-                br: false,
-                mtr:false,
-                bl: false
-            });
-            blurredImage.applyFilters();
-
-            selected_canvas.remove(rect);// removing old object
-
-            selected_canvas.add(blurredImage);
-            selected_canvas.setActiveObject(blurredImage);
-            selected_canvas.renderAll();
-            //eventBus.dispatch('send-to-websocket-fabric',{type:'add',userPointer:blurredImage});
+        if (rect.width === 0 || rect.height === 0) {
+            selected_canvas.remove(rect);
+            return;
         }
+
+        // Create a cropped area and apply blur
+        const copiedCanvas = selected_canvas.toCanvasElement();
+        const croppedCanvas = document.createElement('canvas');
+        const ctx = croppedCanvas.getContext('2d');
+
+        croppedCanvas.width = rect.width;
+        croppedCanvas.height = rect.height;
+
+        ctx.filter = 'blur(5px)'; // Apply blur effect
+        ctx.drawImage(
+            copiedCanvas,
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height,
+            0,
+            0,
+            rect.width,
+            rect.height
+        );
+
+        const blurredImage = new fabric.Image(croppedCanvas, {
+            left: rect.left,
+            top: rect.top,
+            width: rect.width,
+            height: rect.height,
+        });
+
+        selected_canvas.remove(rect);
+        selected_canvas.add(blurredImage);
+        selected_canvas.setActiveObject(blurredImage);
         selected_canvas.renderAll();
+
+        //////// WEBSOCKET REQUEST //////////
+        sendUpdateRequestForLiveEditing({ type: 'ADD_ANNOTATOR_OBJECT', object: blurredImage });
+        //////// WEBSOCKET REQUEST //////////
     });
 }
 
@@ -1565,9 +1682,9 @@ export function speechBubbleInCanvasOnMouseMove(selected_canvas){
         isDown = false;
         let group = new fabric.Group([poly, rect, poly2, textbox],
             {
-                id:'speech-bubble'+new Date().getTime()+Math.random().toString(36).substr(2,8)+userId,
-                userId: userId,
-                customEditorId:custom_editor_id,
+                id:'speech-bubble'+new Date().getTime()+Math.random().toString(36).substr(2,8)+editorUserData?.id,
+                userId: editorUserData?.id,
+                customEditorId:mainEditorDocumentId,
                 shapeName:'speech bubble',
                 lastModifiedTime:new Date(),
                 selectable:true,
@@ -1591,7 +1708,9 @@ export function speechBubbleInCanvasOnMouseMove(selected_canvas){
         }else {
             selected_canvas.add(group);
             selected_canvas.setActiveObject(group);
-            //eventBus.dispatch('send-to-websocket-fabric', {type: 'add', userPointer: group});
+            //////// WEBSOCKET REQUEST //////////
+            sendUpdateRequestForLiveEditing({type:'ADD_ANNOTATOR_OBJECT',object:group})
+            //////// WEBSOCKET REQUEST //////////
         }
     });
 }
@@ -1744,9 +1863,9 @@ export function speechBubbleInCanvas(selected_canvas){
         isDown = false;
         let group = new fabric.Group([poly, rect, poly2, textbox],
             {
-                id:'speech-bubble'+new Date().getTime()+Math.random().toString(36).substr(2,8)+userId,
-                userId: userId,
-                customEditorId:custom_editor_id,
+                id:'speech-bubble'+new Date().getTime()+Math.random().toString(36).substr(2,8)+editorUserData?.id,
+                userId: editorUserData?.id,
+                customEditorId:mainEditorDocumentId,
                 shapeName:'speech bubble',
                 lastModifiedTime:new Date(),
                 selectable:true,
@@ -1768,417 +1887,239 @@ export function speechBubbleInCanvas(selected_canvas){
         if(height === origY && width === origX){
             selected_canvas.add(group);
             selected_canvas.setActiveObject(group);
-            //eventBus.dispatch('send-to-websocket-fabric', {type: 'add', userPointer: group});
+            //////// WEBSOCKET REQUEST //////////
+            sendUpdateRequestForLiveEditing({type:'ADD_ANNOTATOR_OBJECT',object:group})
+            //////// WEBSOCKET REQUEST //////////
             return true;
         }else {
             selected_canvas.add(group);
             selected_canvas.setActiveObject(group);
-            //eventBus.dispatch('send-to-websocket-fabric', {type: 'add', userPointer: group});
+            //////// WEBSOCKET REQUEST //////////
+            sendUpdateRequestForLiveEditing({type:'ADD_ANNOTATOR_OBJECT',object:group})
+            //////// WEBSOCKET REQUEST //////////
         }
     });
 }
 
-function drawPolygonInCanvas(selected_canvas){
+function drawPolygonInCanvas(selected_canvas) {
     removeEvents(selected_canvas);
-    let min = 99;
-    let max = 999999;
     let polygonMode = true;
     let pointArray = [];
     let lineArray = [];
-    let activeLine;
-    let activeShape = false;
-    let canvas,line,polygon,points;
+    let activeLine = null;
+    let activeShape = null;
 
-    let prototypefabric = new function () {
-        this.initCanvas = function () {
-            canvas = selected_canvas;
-
-            canvas.on('mouse:down', function (options) {
-                if(options.target && options?.target?.id == pointArray[0]?.id){
-                    prototypefabric.polygon.generatePolygon(pointArray);
-                }
-                if(polygonMode){
+    const prototypefabric = {
+        initCanvas: function () {
+            selected_canvas.on('mouse:down', (options) => {
+                if (options.target && options?.target?.id === pointArray[0]?.id) {
+                    prototypefabric.polygon.generatePolygon();
+                } else if (polygonMode) {
                     prototypefabric.polygon.addPoint(options);
-                }else{
-                    prototypefabric.polygon.drawPolygon();
                 }
             });
-            canvas.on('mouse:move', function (options) {
-                if(activeLine && activeLine.class == "line"){
-                    let pointer = canvas.getPointer(options.e);
+
+            selected_canvas.on('mouse:move', (options) => {
+                if (activeLine) {
+                    const pointer = selected_canvas.getPointer(options.e);
                     activeLine.set({ x2: pointer.x, y2: pointer.y });
 
-                    let points = activeShape.get("points");
-                    points[pointArray.length] = {
-                        x:pointer.x,
-                        y:pointer.y
+                    if (activeShape) {
+                        const points = activeShape.get("points");
+                        points[pointArray.length] = { x: pointer.x, y: pointer.y };
+                        activeShape.set({ points });
                     }
-                    activeShape.set({
-                        points: points
-                    });
-                    // canvas.renderAll();
+
+                    selected_canvas.renderAll();
                 }
-                canvas.renderAll();
             });
-        };
-    };
-
-
-    prototypefabric.polygon = {
-        drawPolygon : function() {
-            polygonMode = true;
-            pointArray = new Array();
-            lineArray = new Array();
-            activeLine;
         },
-        addPoint : function(options) {
-            let random = Math.floor(Math.random() * (max - min + 1)) + min;
-            let id = new Date().getTime() + random;
-            let circle = new fabric.Circle({
-                radius: 5,
-                fill: '#ffffff',
-                stroke: '#333333',
-                strokeWidth: 0.5,
-                left: (options.e.layerX/canvas.getZoom()),
-                top: (options.e.layerY/canvas.getZoom()),
-                selectable: false,
-                hasBorders: false,
-                hasControls: false,
-                originX:'center',
-                originY:'center',
-                id:id,
-                shapeName:'polygon-start',
-                objectCaching:false
-            });
-            if(pointArray.length === 0){
-                circle.set({
-                    fill:'red'
-                })
-            }
-            points = [(options.e.layerX/canvas.getZoom()),(options.e.layerY/canvas.getZoom()),(options.e.layerX/canvas.getZoom()),(options.e.layerY/canvas.getZoom())];
-            line = new fabric.Line(points, {
-                strokeWidth: 2,
-                fill: '#999999',
-                stroke: '#999999',
-                class:'line',
-                originX:'center',
-                originY:'center',
-                selectable: false,
-                hasBorders: false,
-                hasControls: false,
-                evented: false,
-                shapeName:'polygon-start',
-                objectCaching:false
-            });
-            if(activeShape){
-                let pos = canvas.getPointer(options.e);
-                points = activeShape.get("points");
-                points.push({
-                    x: pos.x,
-                    y: pos.y
-                });
-                polygon = new fabric.Polygon(points,{
-                    stroke:'#333333',
-                    strokeWidth:1,
-                    fill: '#cccccc',
-                    opacity: 0.3,
+
+        polygon: {
+            drawPolygon: function () {
+                polygonMode = true;
+                pointArray = [];
+                lineArray = [];
+                activeLine = null;
+                activeShape = null;
+            },
+
+            addPoint: function (options) {
+                const pointer = selected_canvas.getPointer(options.e);
+
+                // Add circle (vertex point)
+                const circle = new fabric.Circle({
+                    radius: 5,
+                    fill: pointArray.length === 0 ? 'red' : '#ffffff',
+                    stroke: '#333333',
+                    strokeWidth: 0.5,
+                    left: pointer.x,
+                    top: pointer.y,
+                    originX: 'center',
+                    originY: 'center',
                     selectable: false,
                     hasBorders: false,
                     hasControls: false,
-                    evented: false,
-                    shapeName:'polygon-start',
-                    objectCaching:false
+                    id: `point_${Date.now()}`,
+                    objectCaching: false,
                 });
-                canvas.remove(activeShape);
-                canvas.add(polygon);
-                activeShape = polygon;
-                canvas.renderAll();
-            } else {
-                let polyPoint = [{x:(options.e.layerX/canvas.getZoom()),y:(options.e.layerY/canvas.getZoom())}];
-                polygon = new fabric.Polygon(polyPoint,{
-                    stroke:'#333333',
-                    strokeWidth:1,
-                    fill: '#cccccc',
-                    opacity: 0.3,
-                    selectable: false,
-                    hasBorders: false,
-                    hasControls: false,
-                    evented: false,
-                    shapeName:'polygon-start',
-                    objectCaching:false
+                pointArray.push(circle);
+                selected_canvas.add(circle);
+
+                // Add line
+                if (pointArray.length > 1) {
+                    const prevPoint = pointArray[pointArray.length - 2];
+                    const line = new fabric.Line(
+                        [prevPoint.left, prevPoint.top, pointer.x, pointer.y],
+                        {
+                            strokeWidth: 2,
+                            stroke: '#999999',
+                            selectable: false,
+                            hasBorders: false,
+                            hasControls: false,
+                            evented: false,
+                            objectCaching: false,
+                        }
+                    );
+                    lineArray.push(line);
+                    selected_canvas.add(line);
+                }
+
+                // Update active shape
+                if (!activeShape) {
+                    activeShape = new fabric.Polygon(
+                        [{ x: pointer.x, y: pointer.y }],
+                        {
+                            stroke: '#333333',
+                            strokeWidth: 1,
+                            fill: '#cccccc',
+                            opacity: 0.3,
+                            selectable: false,
+                            evented: false,
+                            objectCaching: false,
+                        }
+                    );
+                    selected_canvas.add(activeShape);
+                } else {
+                    const points = activeShape.get("points");
+                    points.push({ x: pointer.x, y: pointer.y });
+                    activeShape.set({ points });
+                    selected_canvas.renderAll();
+                }
+
+                // Create active line for dynamic updates
+                activeLine = new fabric.Line(
+                    [pointer.x, pointer.y, pointer.x, pointer.y],
+                    {
+                        strokeWidth: 2,
+                        stroke: '#999999',
+                        selectable: false,
+                        hasBorders: false,
+                        hasControls: false,
+                        evented: false,
+                        objectCaching: false,
+                    }
+                );
+                selected_canvas.add(activeLine);
+            },
+
+            generatePolygon: function () {
+                const points = pointArray.map((point) => ({ x: point.left, y: point.top }));
+
+                // Clean up temporary shapes
+                pointArray.forEach((point) => selected_canvas.remove(point));
+                lineArray.forEach((line) => selected_canvas.remove(line));
+                selected_canvas.remove(activeShape);
+                selected_canvas.remove(activeLine);
+
+                // Create the final polygon
+                const polygon = new fabric.Polygon(points, {
+                    stroke: '#000',
+                    strokeWidth: 1,
+                    fill: selectedToolColor || '#cccccc',
+                    selectable: true,
+                    hasControls: true,
+                    cornerStyle: 'circle',
+                    cornerSize: 10,
+                    cornerColor: '#6B7587',
                 });
-                activeShape = polygon;
-                canvas.add(polygon);
-            }
-            activeLine = line;
+                selected_canvas.add(polygon);
+                selected_canvas.setActiveObject(polygon);
 
-            pointArray.push(circle);
-            lineArray.push(line);
+                // Send to server or live edit sync
+                sendUpdateRequestForLiveEditing({
+                    type: 'ADD_ANNOTATOR_OBJECT',
+                    object: polygon,
+                });
 
-            canvas.add(line);
-            canvas.add(circle);
-            canvas.selection = false;
+                // Reset state
+                selected_canvas.renderAll();
+                polygonMode = false;
+                activeLine = null;
+                activeShape = null;
+            },
         },
-        generatePolygon : function(pointArray){
-            points = [];
-            pointArray.forEach((point) => {
-                points.push({
-                    x: point.left,
-                    y: point.top
-                });
-                canvas.remove(point);
-            });
-
-            lineArray.forEach((line) => {
-                canvas.remove(line);
-            });
-            canvas.remove(activeShape).remove(activeLine);
-            polygon = new fabric.Polygon(points,{
-                id:'polygon'+new Date().getTime()+Math.random().toString(36).substr(2,8)+userId,
-                userId: userId,
-                customEditorId:custom_editor_id,
-                shapeName:'polygon',
-                lastModifiedTime:new Date(),
-                selectable:true,
-                hasControls:true,
-                borderColor:'#000',
-                hasBorders:true,
-                cornerStyle:'circle',
-                cornerSize:10,
-                cornerColor:'#6B7587',
-                padding:0,
-                LockRotation: false,
-                transparentCorners:false,
-                fill: selectedToolColor,
-            });
-            canvas.add(polygon);
-            canvas.setActiveObject(polygon);
-            //eventBus.dispatch('send-to-websocket-fabric',{type:'add',userPointer:polygon,resize:true});
-            canvas.renderAll();
-
-            activeLine = null;
-            activeShape = null;
-            polygonMode = false;
-        }
     };
 
     prototypefabric.initCanvas();
     prototypefabric.polygon.drawPolygon();
 }
 
-export function drawObjectInCanvas(id, selectedCanvas){
-    let activeObjectElement= selectedCanvas.getActiveObject();
+export function infiniteCanvasProperties(selectedFabricCanvas){
 
-    if (activeObjectElement && typeof activeObjectElement !== "undefined" && activeObjectElement.shapeName === 'text' && activeObjectElement.isEditing){
-        activeObjectElement.exitEditing();
-    }
-    changeObjectSelection(false, selectedCanvas);
-    //giving default width to stroke
-    //Changing cursor of canvas brush
-    // $(".modal_screenshot_image").removeClass('modal_screenshot_image_cursor_move');
-    // $(".modal_screenshot_image").addClass('modal_screenshot_image_cursor_crosshair');
-    // eventBus.dispatch('call-function-to-selection-tool-active',false);
-
-    //sudo draw mode
-    selectedCanvas.isDrawingMode = true;
-    selectedCanvas.freeDrawingBrush = new fabric.PencilBrush(selectedCanvas);
-    selectedCanvas.freeDrawingBrush.color = "#f1f1f100";
-    selectedCanvas.freeDrawingBrush.width = 0;
-    drawActive = false;
-
-    switch(id){
-        case 'draw':
-            drawActive= true;
-            selectedCanvas.freeDrawingBrush = new fabric.PencilBrush(selectedCanvas);
-            selectedCanvas.freeDrawingBrush.width = Number(selectedToolStroke);
-            selectedCanvas.freeDrawingBrush.color = selectedToolColor;
-            enableFreeDrawing(selectedCanvas,'free draw');
-            break;
-        case 'select':
-            removeEvents(selectedCanvas);
-            selectedCanvas.isDrawingMode = false;
-            //Changing cursor of canvas brush
-            // $(".modal_screenshot_image").addClass('modal_screenshot_image_cursor_move');
-            // $(".modal_screenshot_image").removeClass('modal_screenshot_image_cursor_crosshair');
-            changeObjectSelection(true, selectedCanvas);
-            // eventBus.dispatch('call-function-to-selection-tool-active',true);
-            break;
-        case 'addImage':
-            removeEvents(selectedCanvas);
-            break;
-        case 'undo':
-        case 'redo':
-            removeEvents(selectedCanvas);
-            break;
-        case 'clear':
-            if(selectedCanvas._objects.length > 1){
-                selectedCanvas.forEachObject(function(obj){ if(obj.backgroundColor !== '#main_image') { selectedCanvas.remove(obj)} });
-                selectedCanvas.selection = false;
-            }
-            digit = 1;
-            alphabetNo = 0;
-            break;
-        case 'crop':
-            changeObjectSelection(false, selectedCanvas);
-            drawCrop(selectedCanvas);
-            break;
-        case 'rectangle':
-            changeObjectSelection(false, selectedCanvas);
-            drawRectangle(selectedCanvas);
-            break;
-        case 'triangle':
-            changeObjectSelection(false, selectedCanvas);
-            drawTriangle(selectedCanvas);
-            break;
-        case 'image-comment':
-            removeEvents(selectedCanvas);
-            //$('.upper-canvas').css({cursor: 'default'});
-            changeObjectSelection(false, window.fabricCanvas);
-            break;
-        case 'circle':
-            drawCircle(selectedCanvas);
-            break;
-        case 'arrow':
-            drawLineArrow(selectedCanvas);
-            break;
-        case 'double-headed-arrow':
-            drawDoubleEndedArrow(selectedCanvas);
-            break;
-        case 'line':
-            changeObjectSelection(false, selectedCanvas);
-            drawLine(selectedCanvas);
-            break;
-        case 'arrow-line':
-            changeObjectSelection(false, selectedCanvas);
-            drawLine(selectedCanvas);
-            break;
-        case 'ellipse':
-            changeObjectSelection(false, selectedCanvas);
-            drawEllipse(selectedCanvas);
-            break;
-        case 'text':
-            changeObjectSelection(false, selectedCanvas);
-            addTextField(selectedCanvas);
-            break;
-        case 'number':
-            changeObjectSelection(false, selectedCanvas);
-            addNumberInCanvas(selectedCanvas);
-            break;
-        case 'alphabet':
-            changeObjectSelection(false, selectedCanvas);
-            addAlphabetInCanvas(selectedCanvas);
-            break;
-        case 'highlighter':
-            changeObjectSelection(false, selectedCanvas);
-            highlightInCanvas(selectedCanvas);
-            break;
-        case 'blur':
-            changeObjectSelection(false, selectedCanvas);
-            highlightBlurInCanvas(selectedCanvas);
-            break;
-        case 'speech-bubbles':
-            changeObjectSelection(false, selectedCanvas);
-            speechBubbleInCanvas(selectedCanvas);
-            break;
-        case 'speech-bubble':
-            changeObjectSelection(false, selectedCanvas);
-            speechBubbleInCanvasOnMouseMove(selectedCanvas);
-            break;
-        case 'polygon':
-            changeObjectSelection(false, selectedCanvas);
-            drawPolygonInCanvas(selectedCanvas);
-            break;
-        // case 'circle-brush':
-        //     changeObjectSelection(false, selectedCanvas);
-        //     drawCircleBrushInCanvas(selectedCanvas);
-        //     break;
-        // case 'remove':
-        //     //Changing cursor of canvas brush
-        //     $(".modal_screenshot_image").addClass('modal_screenshot_image_cursor_move');
-        //     $(".modal_screenshot_image").removeClass('modal_screenshot_image_cursor_crosshair');
-        //     changeObjectSelection(true, selectedCanvas);
-        //     $(actionToolClass+"[data-id='select']").addClass('active');
-        //     $(this).removeClass('active');
-        //     removeObjectFromCanvas(selectedCanvas);
-        //     break;
-    }
-}
-
-
-export function infiniteCanvasProperties(selectedFabricCanvas = null){
-    if(selectedFabricCanvas == null)
-        selectedFabricCanvas = window.fabricCanvas;
-
-    selectedFabricCanvas.off("object:modified");
     selectedFabricCanvas.on("object:modified", function(e) {
         resizeCanvasAndMoveObject(e,selectedFabricCanvas);
     });
-    selectedFabricCanvas.off("object:added");
+
     selectedFabricCanvas.on("object:added", function(e) {
         resizeCanvasAndMoveObject(e,selectedFabricCanvas);
     });
-    /*selectedFabricCanvas.off("object:moving");
-    selectedFabricCanvas.on("object:moving", function(e) {
-        resizeCanvasAndMoveObject(e,selectedFabricCanvas);
-    });*/
-
 }
 
-export function resizeCanvasAndMoveObject(e, selectedFabricCanvas) {
-    // Get the zoom level
+export function resizeCanvasAndMoveObject(e,selectedFabricCanvas){
+    //getting zoom
     let zoom = selectedFabricCanvas.getZoom();
-
-    // Current selected object
+    //current selected object
     let moveB = e.target;
-
-    // Original canvas
+    //original canvas
     let c = e.target.canvas;
-
-    // Get the top and left of the moved object
     let top = moveB.top;
     let left = moveB.left;
 
-    // Get all objects on the canvas
     let objects = selectedFabricCanvas.getObjects();
-
-    // Initialize the boundaries of objects on the canvas
-    let maxLeft = 0, maxTop = 0, minLeft = objects[0].left, minTop = objects[0].top;
-    let positiveTop = 0, positiveLeft = 0;
-
-    // Loop through objects to find the max and min coordinates for resizing the canvas
-    if (!onLoad) {
+    let maxLeft=0,maxTop=0,minLeft=objects[0].left,minTop= objects[0].top,positiveTop=0,positiveLeft=0;
+    if(!onLoad){
         for (let i in objects) {
-            if (maxLeft < (objects[i].left + objects[i].width)) {
-                maxLeft = objects[i].left + objects[i].width;
+            if(maxLeft < (objects[i].left +objects[i].width)){
+                maxLeft = objects[i].left+objects[i].width;
             }
-            if (minLeft > objects[i].left) {
+            if(minLeft >objects[i].left){
                 minLeft = objects[i].left;
             }
-            if (maxTop < (objects[i].top + objects[i].height)) {
-                maxTop = objects[i].top + objects[i].height;
+            if(maxTop < (objects[i].top +objects[i].height)){
+                maxTop = objects[i].top +objects[i].height;
             }
-            if (minTop > objects[i].top) {
+            if(minTop >objects[i].top){
                 minTop = objects[i].top;
             }
         }
     }
 
-    // Adjust the canvas if object is moved outside the top boundary
-    if (top < 0) {
+    if(top < 0){
         positiveTop = -1 * top;
-        maxTop = maxTop + positiveTop;
-    } else if (minTop > 0 && !onLoad) {
-        positiveTop = -1 * minTop;
+        maxTop=maxTop+positiveTop;
+
+    }else if( minTop > 0 && !onLoad){
+        positiveTop =  -1 * minTop;
     }
-    if (positiveTop !== 0) {
+    if(positiveTop !== 0){
         for (let i in objects) {
             objects[i].top = objects[i].top + positiveTop;
         }
         c.setHeight(c.height + positiveTop);
     }
 
-    // Adjust the canvas if object is moved outside the left boundary
-    if (left < 0 || minLeft > 0) {
+    if(left < 0 || minLeft > 0){
         positiveLeft = left < 0 ? -1 * left : -1 * minLeft;
         for (let i in objects) {
             objects[i].left = objects[i].left + positiveLeft;
@@ -2186,22 +2127,24 @@ export function resizeCanvasAndMoveObject(e, selectedFabricCanvas) {
         c.setWidth(c.width + positiveLeft);
     }
 
-    // Calculate the right boundary of the selected object
+    //calculating right of selected object
     let right = left + moveB.getBoundingRect().width;
-
-    // Check if the canvas needs to be extended horizontally (width)
-    if ((c.width - 6) < (right * zoom)) {
+    // Here we are moving the current selected object.
+    // moveB.left = Math.min(Math.max(left, c._offset.left - 38));
+    // moveB.top = Math.min(Math.max(top, c._offset.top - 162));
+    // here we are resizing canvas
+    if((c.width - 6) < (right * zoom))
         c.setWidth((right * zoom) + 10);
-    } else if ((c.width - 6) > ((maxLeft * zoom) + 10) && !onLoad) {
-        c.setWidth((maxLeft * zoom) + 10);
-    }
+    else if((c.width - 6) > ((maxLeft * zoom)+10) && !onLoad)
+        c.setWidth((maxLeft * zoom) + 10)
 
-    // Check if the canvas needs to be extended vertically (height)
-    if ((c.height - 6) < (top * zoom) + (moveB.getBoundingRect().height * zoom)) {
+    if((c.height - 6) < (top * zoom) + (moveB.getBoundingRect().height * zoom))
         c.setHeight((top * zoom) + (moveB.getBoundingRect().height * zoom) + 10);
-    } else if ((c.height - 6) > ((maxTop * zoom) + 10) && !onLoad) {
-        c.setHeight((maxTop * zoom) + 10);
-    }
+    else if((c.height -6) > ((maxTop * zoom)+10)  && !onLoad)
+        c.setHeight((maxTop * zoom)+10)
+
+    selectedFabricCanvas.renderAll();
 }
+
 
 

@@ -24,7 +24,9 @@
   "author": "devp23 Mayank",
   "license": "MIT",
   "dependencies": {
+    "buffer": "^6.0.3",
     "fabric": "^6.5.4",
-    "jquery": "^3.7.1"
+    "jquery": "^3.7.1",
+    "socket.io-client": "^4.8.1"
   }
 }

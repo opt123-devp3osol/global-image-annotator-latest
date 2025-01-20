@@ -120,12 +120,38 @@ export function createToolbar(toolbar,tools = []) {
 
     if(tools.includes('draw') || !tools?.length){
         toolbar.innerHTML += `
-        <div class="global_editor_button_group event_group_tool">
+        <div class="global_editor_button_group event_group_tool separate_section">
             <div class="tool_bar_wrap">
                 <button type="button" class="global_editor_button global_image_annotator_toolbar_click" tabindex="-1" data-id="draw">
                    <svg width="17" height="17" viewBox="0 0 20 20.002"><path d="M144,345.24a1,1,0,0,0-.29-.71l-4.24-4.24a1.014,1.014,0,0,0-1.42,0l-2.83,2.83h0l-10.93,10.93a1,1,0,0,0-.29.71V359a1,1,0,0,0,1,1h4.24a1,1,0,0,0,.76-.29l10.87-10.93h0l2.84-2.78a1.183,1.183,0,0,0,.22-.33.963.963,0,0,0,0-.24.654.654,0,0,0,0-.14ZM128.83,358H126v-2.83l9.93-9.93,2.83,2.83Zm11.34-11.34-2.83-2.83,1.42-1.41,2.82,2.82Z" transform="translate(-124 -340)" fill="#404040"/></svg>
                 </button>
                 <div class="ge_tooltip_wrapper"><span class="hover_ele_type">Draw</span></div>
+            </div>
+        </div>`;
+    }
+
+    if(tools.includes('polygon') || !tools?.length){
+        toolbar.innerHTML += `
+        <div class="global_editor_button_group event_group_tool">
+            <div class="tool_bar_wrap">
+                 <button type="button" class="global_editor_button global_image_annotator_toolbar_click" tabindex="-1" data-id="polygon">
+                   <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 19.31 20"><path id="PenFill" d="M13.606,2.379a2.07,2.07,0,0,0-3.9,0H3.379A.69.69,0,1,0,2,2.379V3.759a.69.69,0,0,0,1.379,0H9.7a2.07,2.07,0,0,0,3.9,0h6.325a.69.69,0,0,0,1.379,0V2.379a.69.69,0,0,0-1.379,0Zm-2.641.69a.69.69,0,1,1,.69.69A.69.69,0,0,1,10.966,3.069Zm.69,2.759a.69.69,0,0,1,.565.294l4.828,6.9a.69.69,0,0,1-.565,1.085H14.414v3.448a.69.69,0,0,1,.69.69V20.31a.69.69,0,0,1-.69.69H8.9a.69.69,0,0,1-.69-.69V18.241a.69.69,0,0,1,.69-.69V14.1H6.828a.69.69,0,0,1-.565-1.085l4.828-6.9A.69.69,0,0,1,11.655,5.828Zm1.379,11.034v.69H10.276v-.69Zm0-1.379V13.414a.69.69,0,0,1,.69-.69h1.434L12.345,8.705v1.95a.69.69,0,1,1-1.379,0V8.705L8.152,12.724H9.586a.69.69,0,0,1,.69.69v2.069ZM9.586,18.931v.69h4.138v-.69Z" transform="translate(-2 -1)" fill="#222222"/></svg>                         
+                 </button>
+                <div class="ge_tooltip_wrapper"><span class="hover_ele_type">Polygon</span></div>
+            </div>
+        </div>`;
+    }
+
+    if(tools.includes('blur') || !tools?.length){
+        toolbar.innerHTML += `
+        <div class="global_editor_button_group event_group_tool">
+            <div class="tool_bar_wrap">
+                <button type="button" class="global_editor_button global_image_annotator_toolbar_click" tabindex="-1" data-id="blur">
+                    <svg width="17" height="17" viewBox="0 0 17.376 20.605">
+                        <path id="Blur" d="M6114.543,75.06a8.687,8.687,0,0,1,0-12.288l5.5-5.509a.9.9,0,0,1,1.272,0l5.51,5.51a8.687,8.687,0,1,1-12.285,12.286Zm1.277-11.014a6.886,6.886,0,1,0,9.736,0l-4.873-4.873Zm3.635,9.554a4.594,4.594,0,0,1-2.539-1.517,4.936,4.936,0,0,1-1-2.184,7.443,7.443,0,0,1-.02-2.684.9.9,0,0,1,1.765.358,5.58,5.58,0,0,0,.029,2.012,2.722,2.722,0,0,0,2.187,2.263.9.9,0,0,1-.21,1.776A.913.913,0,0,1,6119.456,73.6Z" transform="translate(-6112 -57.001)" fill="#222"/>
+                    </svg>
+                </button>
+                <div class="ge_tooltip_wrapper"><span class="hover_ele_type">Blur</span></div>
             </div>
         </div>`;
     }

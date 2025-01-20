@@ -1,5 +1,4 @@
 import {createImageAnnotatorIframe} from "./IframeImageAnnotatorEditor";
-// import {SocketIOManager} from "./SocketIOManager";
 import * as fabric from "fabric";
 import {generateUniqueIdForBlock, getInitialFabricDoxData} from "./AnnotatorEditorHelper";
 import {createToolbar} from "./toolbar";
@@ -9,12 +8,13 @@ import {
     drawObjectInCanvas,
     infiniteCanvasProperties
 } from "./EditorToolbarAnnotationLiberary";
+import {SocketIOManager} from "./SocketIOManager";
 const optionsForWebSocket = {
     reconnectInterval: 5000,  // 5 seconds reconnect interval
     heartbeatInterval: 15000, // 15 seconds heartbeat interval
 };
 export const baseServerUrl = `https://backend.timebox.ai/global-editor-api`;
-export let userInfo = null;
+export let editorUserData = null;
 export let websocketManager = null;
 export let mainEditorDocumentId = null;
 export let fabricCanvas = null;
@@ -41,17 +41,9 @@ export class ImageAnnotatorEditor {
                         throw new Error(`Element with ID ${editorId} or ${toolbarId} not found.`);
                     }
 
-                    ///////////////////  SETUP WEB SOCKET /////////////////////
-                    //websocketManager = new SocketIOManager(this.editor, mainEditorDocumentId, optionsForWebSocket);
-                    ///////////////////  SETUP WEB SOCKET /////////////////////
-
                     /////////// SETUP EDITOR AND OTHER FUNCTIONS /////////////
                     this.setupEditorAndToolbarOtherFunctions(options);
                     /////////// SETUP EDITOR AND OTHER FUNCTIONS /////////////
-
-                    ////////// GET USER INFO /////////
-                    this.getAndSetCurrentUserInfo();
-                    ////////// GET USER INFO /////////
 
                 },0)
 
@@ -68,7 +60,11 @@ export class ImageAnnotatorEditor {
         fabricCanvas.selection = false;
         console.log('Fabric.js Canvas initialized:', fabricCanvas);
         /////////// SETUP EDITOR AND OTHER FUNCTIONS /////////////
-        this.setImageIntoImageAnnotator('blank_image_editor_screen.png','https://backend.timebox.ai/global-editor-api/actionToGetFabricAnnotatorJsonFileTempApiCall');
+        this.setImageIntoImageAnnotator({
+            objectId:'blank_image_editor_screen.png',
+            imageUrl:'https://backend.timebox.ai/global-editor-api/actionToGetFabricAnnotatorJsonFileTempApiCall',
+            userData:{id:'user-'+generateUniqueIdForBlock(),name:'Mayank Dobriyal'},
+        });
         /////////// SETUP EDITOR AND OTHER FUNCTIONS /////////////
         const editorRect = this.editor.getBoundingClientRect();
         if(this.toolbar) {
@@ -106,8 +102,26 @@ export class ImageAnnotatorEditor {
         });
     }
 
-    setImageIntoImageAnnotator(imageUniqueName,imageUrl) {
-        mainEditorDocumentId = `fabric_annotation_json_${imageUniqueName}`;
+    setImageIntoImageAnnotator({objectId, imageUrl,userData}) {
+
+        if(!objectId){
+            alert('objectId is not valid ');
+            return;
+        }
+
+        if(!imageUrl){
+            alert('imageUrl not valid ');
+            return;
+        }
+
+        if(!userData?.id){
+            alert('userData is not valid ');
+            return;
+        }
+
+        mainEditorDocumentId = `fabric_annotation_json_${objectId}`;
+        editorUserData = userData;
+        let current = this;
         const getImageDataUrl = (img) => {
             // Create an offscreen canvas
             const canvas = document.createElement('canvas');
@@ -146,7 +160,7 @@ export class ImageAnnotatorEditor {
                 },
                 body: JSON.stringify({
                     fabRicJsonObject: getInitialFabricDoxData(dataURL,height,width),
-                    imageUniqueName: imageUniqueName
+                    imageUniqueName: objectId
                 }) // Convert the data to a JSON string
             })
                 .then(response => {
@@ -209,6 +223,11 @@ export class ImageAnnotatorEditor {
                             changeObjectSelection(false, fabricCanvas);
                             infiniteCanvasProperties(fabricCanvas);
                             drawLineArrow(fabricCanvas);
+
+                            // WEB SOCKET CALL /////////////
+                            websocketManager = new SocketIOManager(current.editor, mainEditorDocumentId, optionsForWebSocket);
+                            // WEB SOCKET CALL /////////////
+
                             fabric.Image.fromURL('./assets/canvas_background_texture.png', ({})).then((img) => {
                                 // Set the background pattern of the canvas
                                 //fabricCanvas.setBackgroundColor({ source: pattern }, fabricCanvas.renderAll.bind(fabricCanvas));
@@ -233,45 +252,6 @@ export class ImageAnnotatorEditor {
         imgObj.onerror = () => {
             console.error('Failed to load the image.');
         };
-    }
-
-
-    openModalPopup (modal){
-        modal.style.display = 'block';
-    }
-
-
-    getAndSetCurrentUserInfo(){
-        if(localStorage.getItem('getRCRImageAnnotatorChannelBroadCastUserInfo')){
-            userInfo = JSON.parse(localStorage.getItem('getRCRImageAnnotatorChannelBroadCastUserInfo'));
-        }else{
-            /////////////// CREATE IMAGE POPUP EVENTS //////////////////////
-            const broadcastModal = this.iframeDocument.querySelector('#globalEditorBroadcastModal');
-            const createBroadcastBtn = this.iframeDocument.querySelector('#globalEditorCreateBroadcastChannel');
-            if(broadcastModal) {
-                this.openModalPopup(broadcastModal);
-                broadcastModal.querySelector('#global_editor_broadcast_user_name').value = '';
-                setTimeout(function(){
-                    broadcastModal?.querySelector('#global_editor_broadcast_user_name')?.focus();
-                },0)
-
-                createBroadcastBtn.addEventListener('click', () => {
-                    const broadcastUserName = broadcastModal.querySelector('#global_editor_broadcast_user_name').value?.trim();
-                    if (broadcastUserName) {
-                        userInfo = {id:'user-'+generateUniqueIdForBlock(),name:broadcastUserName};
-                        localStorage.setItem('getRCRImageAnnotatorChannelBroadCastUserInfo',JSON.stringify(userInfo));
-                        broadcastModal.style.display = 'none';
-                    }else{
-                        if(!broadcastUserName){
-                            setTimeout(function(){
-                                broadcastModal?.querySelector('#global_editor_broadcast_user_name')?.focus();
-                            },0)
-                        }
-                    }
-                });
-            }
-            ///////////////// CREATE IMAGE POPUP EVENTS //////////////////////
-        }
     }
 
     // Static method to create a new TextEditor instance
