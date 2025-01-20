@@ -1,6 +1,7 @@
 import io from 'socket.io-client';
 import {updatePreviewDocDataLiveEditing} from "./AnnotatorEditorHelper"; // Import Socket.IO client
 
+export let isProcessingRemoteUpdate = false;
 export class SocketIOManager {
     constructor(editor, mainEditorDocumentId, options = {}) {
         // Set Socket.IO server URL and options
@@ -96,7 +97,11 @@ export class SocketIOManager {
         switch (data?.type) {
             case 'actionToUpdateImageAnnotatorDoc':
                 if (data.payload !== undefined) {
+                    isProcessingRemoteUpdate = true;
                     updatePreviewDocDataLiveEditing(data.payload);
+                    setTimeout(()=>{
+                        isProcessingRemoteUpdate = false;
+                    },0)
                 }
                 break;
         }

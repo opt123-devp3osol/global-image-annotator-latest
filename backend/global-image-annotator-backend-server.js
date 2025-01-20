@@ -4,6 +4,7 @@ import http from 'http';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
+import {actionToUpdateImageAnnotatorJsonFile} from "./helper/ImageAnnotationBackendHelper.js";
 
 const app = express();
 app.use(cors());
@@ -65,7 +66,12 @@ globalEditorNamespace.on('connection', (socket) => {
       const jsonString = binaryMessage.toString();
       const jsonData = JSON.parse(jsonString);
 
-      const { mainEditorDocumentId } = jsonData; // Assuming messages have a channel ID
+      const { mainEditorDocumentId,type,payload } = jsonData; // Assuming messages have a channel ID
+
+      if(type === 'actionToUpdateImageAnnotatorDoc'){
+        actionToUpdateImageAnnotatorJsonFile(mainEditorDocumentId,payload)
+      }
+
       // Send the message to everyone else in the room (except the sender)
       socket.to(mainEditorDocumentId).emit('message', binaryMessage);
     } catch (error) {

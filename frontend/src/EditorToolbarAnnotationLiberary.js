@@ -1,6 +1,7 @@
 import * as fabric from "fabric";
 import {sendUpdateRequestForLiveEditing} from "./AnnotatorEditorHelper";
-import {editorUserData, mainEditorDocumentId} from "./ImageAnnotatorMain";
+import {editorUserData, fabricCanvas, mainEditorDocumentId} from "./ImageAnnotatorMain";
+import {isProcessingRemoteUpdate} from "./SocketIOManager";
 
 let drawActive = false;
 let selectedToolColor = '#FF0000';
@@ -413,9 +414,6 @@ function drawRectangle(selected_canvas) {
             selected_canvas.remove(rect);
         }else{
             selected_canvas.setActiveObject(rect);
-            //////// WEBSOCKET REQUEST //////////
-            sendUpdateRequestForLiveEditing({type:'ADD_ANNOTATOR_OBJECT',object:rect})
-            //////// WEBSOCKET REQUEST //////////
         }
         selected_canvas.renderAll();
     });
@@ -532,9 +530,6 @@ function drawTriangle(selected_canvas) {
             selected_canvas.remove(tri);// removing old object
         }else{
             selected_canvas.setActiveObject(tri);
-            //////// WEBSOCKET REQUEST //////////
-            sendUpdateRequestForLiveEditing({type:'ADD_ANNOTATOR_OBJECT',object:tri})
-            //////// WEBSOCKET REQUEST //////////
         }
         selected_canvas.renderAll();
     });
@@ -612,9 +607,6 @@ function drawCircle(selected_canvas) {
                 mtr:false});
             circle.setCoords();
             selected_canvas.setActiveObject(circle);
-            //////// WEBSOCKET REQUEST //////////
-            sendUpdateRequestForLiveEditing({type:'ADD_ANNOTATOR_OBJECT',object:circle})
-            //////// WEBSOCKET REQUEST //////////
         }
         selected_canvas.renderAll();
     });
@@ -775,9 +767,6 @@ export function drawLineArrow(selected_canvas){
         }else {
             canvas.add(group);
             canvas.setActiveObject(group);
-            //////// WEBSOCKET REQUEST //////////
-            sendUpdateRequestForLiveEditing({type:'ADD_ANNOTATOR_OBJECT',object:group})
-            //////// WEBSOCKET REQUEST //////////
         }
     });
 
@@ -929,9 +918,6 @@ export function drawDoubleEndedArrow(selected_canvas) {
         }else {
             canvas.add(group);
             canvas.setActiveObject(group);
-            //////// WEBSOCKET REQUEST //////////
-            sendUpdateRequestForLiveEditing({type:'ADD_ANNOTATOR_OBJECT',object:group})
-            //////// WEBSOCKET REQUEST //////////
         }
     });
 }
@@ -985,9 +971,6 @@ function drawLine(selected_canvas) {
             selected_canvas.remove(line);// removing old object
         }else{
             selected_canvas.setActiveObject(line);
-            //////// WEBSOCKET REQUEST //////////
-            sendUpdateRequestForLiveEditing({type:'ADD_ANNOTATOR_OBJECT',object:line})
-            //////// WEBSOCKET REQUEST //////////
         }
         selected_canvas.renderAll();
     });
@@ -1056,9 +1039,6 @@ function drawEllipse(selected_canvas){
             selected_canvas.remove(ellipse);
         }else{
             selected_canvas.setActiveObject(ellipse);
-            //////// WEBSOCKET REQUEST //////////
-            sendUpdateRequestForLiveEditing({type:'ADD_ANNOTATOR_OBJECT',object:ellipse})
-            //////// WEBSOCKET REQUEST //////////
         }
         selected_canvas.renderAll();
 
@@ -1266,9 +1246,6 @@ function addNumberInCanvas(selected_canvas) {
         digit++;
 
         // Dispatch an event if needed
-        //////// WEBSOCKET REQUEST //////////
-        sendUpdateRequestForLiveEditing({type:'ADD_ANNOTATOR_OBJECT',object:group})
-        //////// WEBSOCKET REQUEST //////////
     });
 }
 
@@ -1384,10 +1361,7 @@ function addAlphabetInCanvas(selected_canvas) {
         // Update alphabetNo
         alphabetNo = alphabetNo === 25 ? 0 : alphabetNo + 1;
 
-        // Optionally dispatch an event
-        //////// WEBSOCKET REQUEST //////////
-        sendUpdateRequestForLiveEditing({type:'ADD_ANNOTATOR_OBJECT',object:group})
-        //////// WEBSOCKET REQUEST //////////
+        // Optionally dispatch an even
     });
 }
 
@@ -1463,9 +1437,6 @@ function highlightInCanvas(selected_canvas){
             selected_canvas.remove(rect);// removing old object
         }else{
             selected_canvas.setActiveObject(rect);
-            //////// WEBSOCKET REQUEST //////////
-            sendUpdateRequestForLiveEditing({type:'ADD_ANNOTATOR_OBJECT',object:rect})
-            //////// WEBSOCKET REQUEST //////////
         }
         selected_canvas.renderAll();
     });
@@ -1551,9 +1522,6 @@ function highlightBlurInCanvas(selected_canvas) {
         selected_canvas.setActiveObject(blurredImage);
         selected_canvas.renderAll();
 
-        //////// WEBSOCKET REQUEST //////////
-        sendUpdateRequestForLiveEditing({ type: 'ADD_ANNOTATOR_OBJECT', object: blurredImage });
-        //////// WEBSOCKET REQUEST //////////
     });
 }
 
@@ -1708,9 +1676,6 @@ export function speechBubbleInCanvasOnMouseMove(selected_canvas){
         }else {
             selected_canvas.add(group);
             selected_canvas.setActiveObject(group);
-            //////// WEBSOCKET REQUEST //////////
-            sendUpdateRequestForLiveEditing({type:'ADD_ANNOTATOR_OBJECT',object:group})
-            //////// WEBSOCKET REQUEST //////////
         }
     });
 }
@@ -1887,16 +1852,10 @@ export function speechBubbleInCanvas(selected_canvas){
         if(height === origY && width === origX){
             selected_canvas.add(group);
             selected_canvas.setActiveObject(group);
-            //////// WEBSOCKET REQUEST //////////
-            sendUpdateRequestForLiveEditing({type:'ADD_ANNOTATOR_OBJECT',object:group})
-            //////// WEBSOCKET REQUEST //////////
             return true;
         }else {
             selected_canvas.add(group);
             selected_canvas.setActiveObject(group);
-            //////// WEBSOCKET REQUEST //////////
-            sendUpdateRequestForLiveEditing({type:'ADD_ANNOTATOR_OBJECT',object:group})
-            //////// WEBSOCKET REQUEST //////////
         }
     });
 }
@@ -2046,11 +2005,7 @@ function drawPolygonInCanvas(selected_canvas) {
                 selected_canvas.add(polygon);
                 selected_canvas.setActiveObject(polygon);
 
-                // Send to server or live edit sync
-                sendUpdateRequestForLiveEditing({
-                    type: 'ADD_ANNOTATOR_OBJECT',
-                    object: polygon,
-                });
+                // Send to server or live edit syn
 
                 // Reset state
                 selected_canvas.renderAll();
@@ -2065,14 +2020,26 @@ function drawPolygonInCanvas(selected_canvas) {
     prototypefabric.polygon.drawPolygon();
 }
 
-export function infiniteCanvasProperties(selectedFabricCanvas){
+export function sendCanvasUpdate(type) {
+    let fabricJsonObj = fabricCanvas.toJSON();
+    fabricJsonObj = {width:fabricCanvas?.width,height:fabricCanvas?.height,...fabricJsonObj}
+    sendUpdateRequestForLiveEditing({
+        type: type,
+        fabricCanvasJson:JSON.stringify(fabricJsonObj),
+    });
+}
+export function infiniteCanvasProperties(selectedFabricCanvas, socket) {
 
     selectedFabricCanvas.on("object:modified", function(e) {
+        if (isProcessingRemoteUpdate) return;
         resizeCanvasAndMoveObject(e,selectedFabricCanvas);
+        sendCanvasUpdate('MODIFY',selectedFabricCanvas);
     });
 
     selectedFabricCanvas.on("object:added", function(e) {
+        if (isProcessingRemoteUpdate) return;
         resizeCanvasAndMoveObject(e,selectedFabricCanvas);
+        sendCanvasUpdate('ADD',selectedFabricCanvas);
     });
 }
 

@@ -17,15 +17,17 @@ export function sendUpdateRequestForLiveEditing(payload,type = 'actionToUpdateIm
 }
 
 export function updatePreviewDocDataLiveEditing(payload){
-    switch (payload?.type){
-        case 'ADD_ANNOTATOR_OBJECT': {
-            // Ensure the fabric canvas instance exists
+    switch (payload?.type) {
+        case 'ADD':
+        case 'MODIFY': {
             if (!fabricCanvas) {
                 console.error("Canvas is not initialized.");
                 return;
             }
-            let objectData = payload.object;
-            // Check if the object needs deserialization
+
+            let objectData = payload.fabricCanvasJson;
+
+            // Parse JSON if it's a string
             if (typeof objectData === 'string') {
                 try {
                     objectData = JSON.parse(objectData);
@@ -35,16 +37,31 @@ export function updatePreviewDocDataLiveEditing(payload){
                 }
             }
 
-            fabric.util.enlivenObjects([objectData]).then((enlivenedObjects) => {
-                enlivenedObjects.forEach((obj) => {
-                    // Add the object to the canvas
-                    fabricCanvas.add(obj);
+            // Update canvas dimensions
+            fabricCanvas.width = objectData.width;
+            fabricCanvas.height = objectData.height;
+
+            // Process the objects
+            fabric.util.enlivenObjects(objectData.objects).then((enlivenedObjects) => {
+                enlivenedObjects.forEach((newObj) => {
+                    const existingObj = fabricCanvas.getObjects().find((obj) => obj.id === newObj.id);
+
+                    if (existingObj) {
+                        // Merge properties of the existing object with the new one
+                        existingObj.set(newObj.toObject());
+                    } else {
+                        // Add new object to the canvas
+                        fabricCanvas.add(newObj);
+                    }
                 });
+
                 // Render the canvas to reflect changes
                 fabricCanvas.renderAll();
             });
+
             break;
         }
     }
+
 }
 
