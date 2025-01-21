@@ -17,51 +17,57 @@ export function sendUpdateRequestForLiveEditing(payload,type = 'actionToUpdateIm
 }
 
 export function updatePreviewDocDataLiveEditing(payload){
-    switch (payload?.type) {
-        case 'ADD':
-        case 'MODIFY': {
-            if (!fabricCanvas) {
-                console.error("Canvas is not initialized.");
-                return;
-            }
+    if (!fabricCanvas) {
+        console.error("Canvas is not initialized.");
+        return;
+    }
 
-            let objectData = payload.fabricCanvasJson;
+    let objectData = payload.fabricCanvasJson;
 
-            // Parse JSON if it's a string
-            if (typeof objectData === 'string') {
-                try {
-                    objectData = JSON.parse(objectData);
-                } catch (error) {
-                    console.error("Invalid JSON object:", error);
-                    return;
-                }
-            }
-
-            // Update canvas dimensions
-            fabricCanvas.width = objectData.width;
-            fabricCanvas.height = objectData.height;
-
-            // Process the objects
-            fabric.util.enlivenObjects(objectData.objects).then((enlivenedObjects) => {
-                enlivenedObjects.forEach((newObj) => {
-                    const existingObj = fabricCanvas.getObjects().find((obj) => obj.id === newObj.id);
-
-                    if (existingObj) {
-                        // Merge properties of the existing object with the new one
-                        existingObj.set(newObj.toObject());
-                    } else {
-                        // Add new object to the canvas
-                        fabricCanvas.add(newObj);
-                    }
-                });
-
-                // Render the canvas to reflect changes
-                fabricCanvas.renderAll();
-            });
-
-            break;
+    // Parse JSON if it's a string
+    if (typeof objectData === 'string') {
+        try {
+            objectData = JSON.parse(objectData);
+        } catch (error) {
+            console.error("Invalid JSON object:", error);
+            return;
         }
     }
 
+    // Update canvas dimensions
+    if (objectData.height && objectData.width) {
+        fabricCanvas.setHeight(objectData.height);
+        fabricCanvas.setWidth(objectData.width);
+    }
+
+    try {
+        // Enliven objects
+        fabric.util.enlivenObjects(objectData.objects)
+            .then((enlivenedObjects) => {
+                enlivenedObjects.forEach((obj) => {
+                    try {
+                        const existingObj = fabricCanvas.getObjects().find((o) => o.id === obj.id);
+
+                        if (existingObj) {
+                            // Remove the existing object from the canvas
+                            fabricCanvas.remove(existingObj);
+                        }
+
+                        // Add the new or updated object to the canvas
+                        fabricCanvas.add(obj);
+                    } catch (error) {
+                        console.error("Error processing object:", obj, error);
+                    }
+                });
+                // Render all objects
+                fabricCanvas.renderAll();
+            })
+            .catch((error) => {
+                console.error("Error enlivening objects:", error);
+            });
+
+    } catch (error) {
+        console.error("Unexpected error during object enlivening:", error);
+    }
 }
 

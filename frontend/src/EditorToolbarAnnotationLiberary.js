@@ -18,13 +18,6 @@ let selectedFontSize = 22;
 let alphabetArray = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','x','y','z'];
 let arrayOfActions = [];
 
-let Direction = {
-    LEFT: 0,
-    UP: 1,
-    RIGHT: 2,
-    DOWN: 3
-};
-
 export function removeEvents(selected_canvas) {
     selected_canvas.selection = false;
     selected_canvas.off('mouse:down');
@@ -38,7 +31,7 @@ export function drawObjectInCanvas(id, selectedCanvas){
     if (activeObjectElement && typeof activeObjectElement !== "undefined" && activeObjectElement.shapeName === 'text' && activeObjectElement.isEditing){
         activeObjectElement.exitEditing();
     }
-
+    removeEvents(selectedCanvas);
     changeObjectSelection(false, selectedCanvas);
 
     // Changing cursor of canvas brush
@@ -559,7 +552,7 @@ function drawCircle(selected_canvas) {
             lastModifiedTime: new Date(),
             selectable: true,
             hasControls: true,
-            borderColor: '#000',
+            borderColor: '#000000',
             hasBorders: true,
             cornerStyle: 'circle',
             cornerSize: 10,
@@ -608,6 +601,7 @@ function drawCircle(selected_canvas) {
             circle.setCoords();
             selected_canvas.setActiveObject(circle);
         }
+
         selected_canvas.renderAll();
     });
 }
@@ -658,7 +652,6 @@ export function drawLineArrow(selected_canvas){
         canvas.add(triangle2, triangle);
 
     });
-
     let _FabricCalcArrowAngle = (x1, y1, x2, y2) =>{
         let angle = 0, x, y;
         x = (x2 - x1);
@@ -693,8 +686,7 @@ export function drawLineArrow(selected_canvas){
 
         return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
     };
-    let _getMidpoint =(x1, x2, y1, y2)=>
-    {
+    let _getMidpoint =(x1, x2, y1, y2)=> {
         return {left:(x1 + x2) / 2 , top:(y1 + y2) / 2};
     }
 
@@ -769,7 +761,6 @@ export function drawLineArrow(selected_canvas){
             canvas.setActiveObject(group);
         }
     });
-
 }
 
 
@@ -1063,6 +1054,7 @@ export function addTextField(selected_canvas) {
         origX = pointer.x;
         origY = pointer.y;
 
+        // Create a temporary rectangle for the text area border
         rect = new fabric.Rect({
             left: origX,
             top: origY,
@@ -1073,19 +1065,22 @@ export function addTextField(selected_canvas) {
             stroke: selectedToolColor,
             selectable: false,
         });
+        selected_canvas.add(rect);
 
+        // Create a new Textbox object
         itext = new fabric.Textbox('', {
-            id: `text-${Date.now()}-${Math.random().toString(36).substr(2, 8)}`,
-            userId: editorUserData?.id,
+            id: `text-${Date.now()}-${Math.random().toString(36).substr(2, 8)}-${editorUserData?.id}`,
+            userId: editorUserData?.id || 'unknown', // Fallback for undefined user ID
             shapeName: 'text',
-            lastModifiedTime: new Date(),
-            fontFamily: selectedTextStyle,
+            lastModifiedTime: new Date().toISOString(),
+            fontFamily: selectedTextStyle || 'Arial',
+            fontSize: Number(selectedTextSize) || 16,
             fontWeight: 600,
             width: 1,
-            height: selectedFontSize,
-            left: origX,
-            top: origY,
-            fill: selectedToolColor,
+            height: selectedFontSize || 16,
+            left: origX || 0,
+            top: origY || 0,
+            fill: selectedToolColor || '#000000',
             cornerSize: 7,
             cornerColor: 'black',
             editingBorderColor: 'black',
@@ -1099,13 +1094,9 @@ export function addTextField(selected_canvas) {
                 blur: 8,
                 offsetX: 0,
                 offsetY: 0,
-                opacity: 1,
             },
             hasRotatingPoint: false,
-            fontSize: Number(selectedTextSize),
         });
-
-        selected_canvas.add(rect);
     });
 
     selected_canvas.on('mouse:move', function (o) {
@@ -1113,6 +1104,7 @@ export function addTextField(selected_canvas) {
 
         let pointer = selected_canvas.getPointer(o.e);
 
+        // Update rectangle and text box dimensions while dragging
         if (origX > pointer.x) {
             rect.set({ left: pointer.x });
             itext.set({ left: pointer.x });
@@ -1134,10 +1126,13 @@ export function addTextField(selected_canvas) {
         rect.setCoords();
         selected_canvas.remove(rect);
 
+        // Avoid adding text box if the width is too small
         if (itext.width < 2) return false;
 
         minHeight = rect.height;
         itext.set({ minHeight: minHeight });
+
+        // Set controls visibility and make it editable
         itext.setControlsVisibility({ mb: false, mtr: false });
         itext.setCoords();
 
@@ -1145,7 +1140,13 @@ export function addTextField(selected_canvas) {
         removeCanvasEvents();
 
         selected_canvas.setActiveObject(itext);
+
+        // Trigger the text editing mode
         itext.enterEditing();
+
+        console.log('itext',itext)
+
+        // Render the updated canvas
         selected_canvas.renderAll();
     });
 }
@@ -1758,9 +1759,8 @@ export function speechBubbleInCanvas(selected_canvas){
         );
 
         selected_canvas.add(poly, rect, poly2, textbox);
-        //  selected_canvas.add(handle).setActiveObject(handle);
+        //selected_canvas.add(handle).setActiveObject(handle);
     });
-
 
     selected_canvas.on('mouse:move', function(o) {
         if (isDown) {
@@ -2022,24 +2022,72 @@ function drawPolygonInCanvas(selected_canvas) {
 
 export function sendCanvasUpdate(type) {
     let fabricJsonObj = fabricCanvas.toJSON();
-    fabricJsonObj = {width:fabricCanvas?.width,height:fabricCanvas?.height,...fabricJsonObj}
-    sendUpdateRequestForLiveEditing({
-        type: type,
-        fabricCanvasJson:JSON.stringify(fabricJsonObj),
-    });
-}
-export function infiniteCanvasProperties(selectedFabricCanvas, socket) {
 
+    // Filter objects with valid IDs and non-empty text boxes
+    const validatedObjects = fabricJsonObj.objects.filter((obj) => {
+        // Skip objects without an ID
+        if (!obj.id) {
+            console.warn("Skipping object without ID:", obj);
+            return false;
+        }
+
+        // Check if the object is a text box and if the text is empty
+        if (obj.type === 'Textbox' && (!obj.text || !obj.text.trim())) {
+            console.warn("Skipping empty text box object:", obj);
+            return false;
+        }
+
+        return true;
+    });
+
+    if (validatedObjects?.length) {
+        fabricJsonObj.objects = [...validatedObjects];
+        fabricJsonObj = { width: fabricCanvas?.width, height: fabricCanvas?.height, ...fabricJsonObj };
+
+        sendUpdateRequestForLiveEditing({
+            type: type,
+            fabricCanvasJson: JSON.stringify(fabricJsonObj),
+        });
+    }
+}
+
+export function setFabricJsonDefaultProperty() {
+    //////////// FABRIC OBJECT UPDATE ///////////////////
+    fabric.Object.prototype.toObject = (function (toObject) {
+        return function () {
+            return {
+                ...toObject.call(this),
+                id : this.id,
+                userId : this.userId,
+                customEditorId : this.customEditorId,
+                shapeName: this.shapeName,
+                fontFamily: this.fontFamily,
+                fontSize: this.fontSize,
+                fontWeight: this.fontWeight,
+                text: this.text,
+                textLines: this.textLines,
+                textAlign: this.textAlign,
+                lastModifiedTime: this.lastModifiedTime
+            };
+        };
+    })(fabric.Object.prototype.toObject);
+    //////////// FABRIC OBJECT UPDATE ///////////////////
+}
+export function infiniteCanvasProperties(selectedFabricCanvas) {
     selectedFabricCanvas.on("object:modified", function(e) {
         if (isProcessingRemoteUpdate) return;
         resizeCanvasAndMoveObject(e,selectedFabricCanvas);
-        sendCanvasUpdate('MODIFY',selectedFabricCanvas);
+        setTimeout(()=>{
+            sendCanvasUpdate('MODIFY',selectedFabricCanvas);
+        })
     });
 
     selectedFabricCanvas.on("object:added", function(e) {
         if (isProcessingRemoteUpdate) return;
         resizeCanvasAndMoveObject(e,selectedFabricCanvas);
-        sendCanvasUpdate('ADD',selectedFabricCanvas);
+        setTimeout(()=>{
+            sendCanvasUpdate('ADD',selectedFabricCanvas);
+        })
     });
 }
 

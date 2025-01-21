@@ -6,7 +6,7 @@ import {
     changeObjectSelection,
     drawLineArrow,
     drawObjectInCanvas,
-    infiniteCanvasProperties
+    infiniteCanvasProperties, setFabricJsonDefaultProperty
 } from "./EditorToolbarAnnotationLiberary";
 import {SocketIOManager} from "./SocketIOManager";
 const optionsForWebSocket = {
@@ -221,6 +221,7 @@ export class ImageAnnotatorEditor {
                                 } else {obj.selectable = true;}
                             });
                             changeObjectSelection(false, fabricCanvas);
+                            setFabricJsonDefaultProperty();
                             infiniteCanvasProperties(fabricCanvas);
                             drawLineArrow(fabricCanvas);
 

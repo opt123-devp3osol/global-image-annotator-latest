@@ -68,9 +68,9 @@ globalEditorNamespace.on('connection', (socket) => {
 
       const { mainEditorDocumentId,type,payload } = jsonData; // Assuming messages have a channel ID
 
-      if(type === 'actionToUpdateImageAnnotatorDoc'){
-        actionToUpdateImageAnnotatorJsonFile(mainEditorDocumentId,payload)
-      }
+      // if(type === 'actionToUpdateImageAnnotatorDoc'){
+      //   actionToUpdateImageAnnotatorJsonFile(mainEditorDocumentId,payload)
+      // }
 
       // Send the message to everyone else in the room (except the sender)
       socket.to(mainEditorDocumentId).emit('message', binaryMessage);
