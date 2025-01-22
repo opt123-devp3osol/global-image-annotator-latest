@@ -17,57 +17,34 @@ export function sendUpdateRequestForLiveEditing(payload,type = 'actionToUpdateIm
 }
 
 export function updatePreviewDocDataLiveEditing(payload){
-    if (!fabricCanvas) {
-        console.error("Canvas is not initialized.");
-        return;
-    }
+    switch (payload?.type){
+        case 'ADD_ANNOTATOR_OBJECT': {
+            // Ensure the fabric canvas instance exists
+            if (!fabricCanvas) {
+                console.error("Canvas is not initialized.");
+                return;
+            }
+            let objectData = payload.object;
+            // Check if the object needs deserialization
+            if (typeof objectData === 'string') {
+                try {
+                    objectData = JSON.parse(objectData);
+                } catch (error) {
+                    console.error("Invalid JSON object:", error);
+                    return;
+                }
+            }
 
-    let objectData = payload.fabricCanvasJson;
-
-    // Parse JSON if it's a string
-    if (typeof objectData === 'string') {
-        try {
-            objectData = JSON.parse(objectData);
-        } catch (error) {
-            console.error("Invalid JSON object:", error);
-            return;
-        }
-    }
-
-    // Update canvas dimensions
-    if (objectData.height && objectData.width) {
-        fabricCanvas.setHeight(objectData.height);
-        fabricCanvas.setWidth(objectData.width);
-    }
-
-    try {
-        // Enliven objects
-        fabric.util.enlivenObjects(objectData.objects)
-            .then((enlivenedObjects) => {
+            fabric.util.enlivenObjects([objectData]).then((enlivenedObjects) => {
                 enlivenedObjects.forEach((obj) => {
-                    try {
-                        const existingObj = fabricCanvas.getObjects().find((o) => o.id === obj.id);
-
-                        if (existingObj) {
-                            // Remove the existing object from the canvas
-                            fabricCanvas.remove(existingObj);
-                        }
-
-                        // Add the new or updated object to the canvas
-                        fabricCanvas.add(obj);
-                    } catch (error) {
-                        console.error("Error processing object:", obj, error);
-                    }
+                    // Add the object to the canvas
+                    fabricCanvas.add(obj);
                 });
-                // Render all objects
+                // Render the canvas to reflect changes
                 fabricCanvas.renderAll();
-            })
-            .catch((error) => {
-                console.error("Error enlivening objects:", error);
             });
-
-    } catch (error) {
-        console.error("Unexpected error during object enlivening:", error);
+            break;
+        }
     }
 }
 
