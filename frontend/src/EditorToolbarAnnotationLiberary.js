@@ -189,7 +189,6 @@ export function drawObjectInCanvas(id, selectedCanvas){
 
 export function enableFreeDrawing(selected_canvas,shapeName){
     removeEvents(selected_canvas);
-
     let isDown;
     selected_canvas.on('mouse:down', function () {
         selected_canvas.freeDrawingBrush.color = selectedToolColor;
@@ -2084,7 +2083,7 @@ export function sendCanvasUpdate(type) {
         object:fabricCanvas.toJSON(),
     });
 }
-export function infiniteCanvasProperties(selectedFabricCanvas, socket) {
+export function infiniteCanvasProperties(selectedFabricCanvas) {
 
     selectedFabricCanvas.on("object:modified", function(e) {
         resizeCanvasAndMoveObject(e,selectedFabricCanvas);
@@ -2121,7 +2120,6 @@ export function infiniteCanvasProperties(selectedFabricCanvas, socket) {
             // sendUpdateRequestForLiveEditing({type:'ADD_ANNOTATOR_OBJECT',object:addedObject})
             // //////// WEBSOCKET REQUEST //////////
         }
-
         resizeCanvasAndMoveObject(e,selectedFabricCanvas);
     });
 }
@@ -2158,7 +2156,6 @@ export function resizeCanvasAndMoveObject(e,selectedFabricCanvas){
     if(top < 0){
         positiveTop = -1 * top;
         maxTop=maxTop+positiveTop;
-
     }else if( minTop > 0 && !onLoad){
         positiveTop =  -1 * minTop;
     }
@@ -2212,7 +2209,31 @@ export function setFabricJsonDefaultProperty() {
                 text: this.text,
                 textLines: this.textLines,
                 textAlign: this.textAlign,
-                lastModifiedTime: this.lastModifiedTime
+                lastModifiedTime: this.lastModifiedTime,
+                left: this.left,
+                top: this.top,
+                fill: this.fill,
+                stroke: this.stroke,
+                lockSkewingX: this.lockSkewingX,
+                hasRotatingPoint: this.hasRotatingPoint,
+                object_id: this.object_id,
+                shadow: this.shadow,
+                selectable: this.selectable,
+                hasControls: this.hasControls,
+                borderColor: this.borderColor,
+                hasBorders: this.hasBorders,
+                cornerStyle: this.cornerStyle,
+                cornerSize: this.cornerSize,
+                cornerColor: this.cornerColor,
+                padding: this.padding,
+                lockRotation: this.lockRotation,
+                transparentCorners: this.transparentCorners,
+                radius: this.radius,
+                centeredScaling: this.centeredScaling,
+                strokeWidth: this.strokeWidth,
+                lockUniScaling: this.lockUniScaling,
+                originX: this.originX,
+                originY: this.originY,
             };
         };
     })(fabric.Object.prototype.toObject);
