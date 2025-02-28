@@ -97,7 +97,9 @@ export function drawObjectInCanvas(id, selectedCanvas){
             break;
         case 'clear':
             if(selectedCanvas._objects.length > 1){
-                selectedCanvas.forEachObject(function(obj){ if(obj.id !== 'main_image') { selectedCanvas.remove(obj)} });
+                selectedCanvas.forEachObject(function(obj){
+                    if(obj.id !== 'main_image') { selectedCanvas.remove(obj)}
+                });
                 selectedCanvas.selection = false;
             }
             digit = 1;
@@ -779,7 +781,6 @@ export function drawLineArrow(selected_canvas){
             //////// WEBSOCKET REQUEST //////////
         }
     });
-
 }
 
 
@@ -2239,3 +2240,51 @@ export function setFabricJsonDefaultProperty() {
     })(fabric.Object.prototype.toObject);
     //////////// FABRIC OBJECT UPDATE ///////////////////
 }
+
+export async function  trimAndReturnCanvasUrl (){
+    // Create a new canvas element
+    let c = document.createElement('canvas');
+    let fabricCanvas = new fabric.Canvas(c); // Create a Fabric canvas on the new element
+
+    // Set canvas background
+    fabricCanvas.backgroundColor = '#ffffff';
+
+    // Hide borders for all objects
+    fabric.Object.prototype.hasBorders = false;
+
+    // Create a new group
+    let myGroup = new fabric.Group([], {
+        originX: 'center',
+        originY: 'center'
+    });
+    fabricCanvas.add(myGroup);
+
+    // Reset zoom
+    fabricCanvas.setZoom(1);
+
+    // Clone and add objects to the group
+    let objects = fabricCanvas.getObjects();
+    for (let obj of objects) {
+        await new Promise((resolve) => {
+            obj.clone((clone) => {
+                myGroup.addWithUpdate(clone); // Add clone to the group
+                resolve(); // Resolve once cloning is done
+            });
+        });
+    }
+    myGroup.setCoords();
+    fabricCanvas.renderAll();
+
+    // Get bounding rect of the group
+    let boundingRect = myGroup.getBoundingRect();
+
+    // Export as a trimmed image
+    return fabricCanvas.toDataURL({
+        format: 'png',
+        left: boundingRect.left,
+        top: boundingRect.top,
+        width: boundingRect.width,
+        height: boundingRect.height,
+        enableRetinaScaling: true // Ensure high-resolution export
+    });
+};

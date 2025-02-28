@@ -6,7 +6,7 @@ import {
     changeObjectSelection,
     drawLineArrow,
     drawObjectInCanvas,
-    infiniteCanvasProperties, setFabricJsonDefaultProperty
+    infiniteCanvasProperties, setFabricJsonDefaultProperty, trimAndReturnCanvasUrl
 } from "./EditorToolbarAnnotationLiberary";
 import {SocketIOManager} from "./SocketIOManager";
 const optionsForWebSocket = {
@@ -40,13 +40,10 @@ export class ImageAnnotatorEditor {
                     if (!this.editor || !this.toolbar) {
                         throw new Error(`Element with ID ${editorId} or ${toolbarId} not found.`);
                     }
-
                     /////////// SETUP EDITOR AND OTHER FUNCTIONS /////////////
                     this.setupEditorAndToolbarOtherFunctions(options);
                     /////////// SETUP EDITOR AND OTHER FUNCTIONS /////////////
-
                 },0)
-
             }
         } catch (error) {
             console.error(error.message);
@@ -89,6 +86,10 @@ export class ImageAnnotatorEditor {
         }, 0)
     }
 
+
+    async getAnnotatedImageDataUri() {
+        await trimAndReturnCanvasUrl()
+    }
 
     setupToolbar() {
         this.toolbar.querySelectorAll('.global_image_annotator_toolbar_click').forEach((element) => {

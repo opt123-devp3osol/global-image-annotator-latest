@@ -2,20 +2,16 @@ export function createToolbar(toolbar,tools = []) {
     if(tools.includes('undo') || !tools?.length){
         toolbar.innerHTML += `
         <div class="global_editor_button_group event_group_tool separate_section">
-            <div class="tool_bar_wrap">
-                <button type="button" class="global_editor_button global_image_annotator_toolbar_click" tabindex="-1" data-id="undo">
+            <button type="button" class="global_editor_button global_image_annotator_toolbar_click" tabindex="-1" data-id="undo">
                    <svg width="17" height="17" viewBox="0 0 17.5 20">
                      <path d="M5.469,5.883c7.453,0,9.844,1.118,9.844,5.566,0,4.72-2.542,6.618-9.775,6.13a1.125,1.125,0,0,0-1.161,1.1A1.151,1.151,0,0,0,5.4,19.929c8.372.565,12.1-2.221,12.1-8.481,0-3.387-1.291-5.6-3.783-6.769-1.9-.886-4.228-1.15-8.248-1.15V0L0,4.706,5.469,9.413Z"/>
                    </svg>
                 </button>
-                <div class="ge_tooltip_wrapper"><span class="hover_ele_type">Undo</span><span class="shortcut">Ctrl+Z</span></div>
-            </div>
-            <div class="tool_bar_wrap">
-                <button type="button" class="global_editor_button global_image_annotator_toolbar_click" tabindex="-1" data-id="redo">
+            <div class="ge_tooltip_wrapper"><span class="hover_ele_type">Undo</span><span class="shortcut">Ctrl+Z</span></div>
+            <button type="button" class="global_editor_button global_image_annotator_toolbar_click" tabindex="-1" data-id="redo">
                     <svg width="17" height="17" viewBox="0 0 17.5 20"><defs></defs><path d="M12.031,5.883C4.578,5.883,2.188,7,2.188,11.449c0,4.72,2.542,6.618,9.775,6.13a1.125,1.125,0,0,1,1.161,1.1A1.151,1.151,0,0,1,12.1,19.929C3.729,20.493,0,17.707,0,11.448c0-3.387,1.291-5.6,3.783-6.769,1.9-.886,4.228-1.15,8.248-1.15V0L17.5,4.706,12.031,9.413Z"/></svg>
                 </button>
-                 <div class="ge_tooltip_wrapper"><span class="hover_ele_type">Redo</span><span class="shortcut">Ctrl+Y</span></div>
-            </div>
+            <div class="ge_tooltip_wrapper"><span class="hover_ele_type">Redo</span><span class="shortcut">Ctrl+Y</span></div>
         </div>`;
     }
 
@@ -24,9 +20,7 @@ export function createToolbar(toolbar,tools = []) {
         <div class="global_editor_button_group event_group_tool separate_section">
             <div class="tool_bar_wrap">
                 <button type="button" class="global_editor_button global_image_annotator_toolbar_click" tabindex="-1" data-id="select">
-                   <svg xmlns="http://www.w3.org/2000/svg" width="12.5" height="16" viewBox="0 0 12.5 16">
-                      <path id="Selection" d="M196.487,262.742a1.039,1.039,0,0,1-.915-.543l-1.052-1.933-2.2,2.172a1.044,1.044,0,0,1-1.778-.729V247.767a1.032,1.032,0,0,1,.274-.692,1.054,1.054,0,0,1,1.475-.06l10.428,9.707a1.034,1.034,0,0,1,.322.746,1.016,1.016,0,0,1-.3.728,1.039,1.039,0,0,1-.738.3h-2.97l.824,1.512a1.026,1.026,0,0,1-.454,1.41l-2.447,1.212A1.065,1.065,0,0,1,196.487,262.742Zm-1.608-4.886,1.791,3.291,1.685-.834-1.783-3.27h4.351l-8.906-8.29v11.933Zm3.662,2.8c0,.012.01.023.015.033h0Zm.206-.535h0Zm2.948-2.357.013.013h0Z" transform="translate(-190.545 -246.742)" fill="#404040"/>
-                   </svg>
+                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path id="mouse-pointer" d="M6.051,15.5.062,1.126A.813.813,0,0,1,1.126.063L15.5,6.051a.813.813,0,0,1-.052,1.521L10.426,9.277l4.513,4.513a.813.813,0,1,1-1.149,1.149L9.277,10.426,7.571,15.448A.811.811,0,0,1,6.828,16H6.8A.812.812,0,0,1,6.051,15.5Zm.673-2.612L8.158,8.666a.807.807,0,0,1,.509-.508l4.22-1.434L2.322,2.323Z" transform="translate(0)" fill="#fff"></path></svg>
                 </button>
                 <div class="ge_tooltip_wrapper"><span class="hover_ele_type">Select</span></div>
             </div>
@@ -38,7 +32,7 @@ export function createToolbar(toolbar,tools = []) {
         <div class="global_editor_button_group event_group_tool separate_section">
             <div class="tool_bar_wrap">
                 <button type="button" class="global_editor_button global_image_annotator_toolbar_click" tabindex="-1" data-id="text">
-                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 11.382 15.5"><path id="Bold" d="M6,10.588h5.765a3.294,3.294,0,0,0,3.294-3.294h0A3.294,3.294,0,0,0,11.765,4H7.647A1.647,1.647,0,0,0,6,5.647Zm0,0v5.765A1.647,1.647,0,0,0,7.647,18h4.529a3.706,3.706,0,0,0,3.706-3.706h0a3.706,3.706,0,0,0-3.706-3.706Z" transform="translate(-5.25 -3.25)" fill="none" stroke="#0c0310" stroke-linecap="round" stroke-width="1.5" fill-rule="evenodd"></path></svg>
+                   <svg width="14" height="14" viewBox="0 0 16 16"><path d="M20.667,6H7.333a1.333,1.333,0,0,0,0,2.667h5.333v12a1.333,1.333,0,1,0,2.667,0v-12h5.333a1.333,1.333,0,1,0,0-2.667Z" transform="translate(-6 -6)"></path></svg>
                 </button>
                 <div class="ge_tooltip_wrapper"><span class="hover_ele_type">Text</span></div>
             </div>
@@ -63,7 +57,7 @@ export function createToolbar(toolbar,tools = []) {
         <div class="global_editor_button_group event_group_tool separate_section">
             <div class="tool_bar_wrap">
                 <button type="button" class="global_editor_button global_image_annotator_toolbar_click" tabindex="-1" data-id="double-headed-arrow">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="18" height="18" x="0px" y="0px"><g data-name="Layer 13"><path d="M62.5005,2.5a1,1,0,0,0-1-1l-28.562,0A1.94,1.94,0,0,0,31.001,3.4365V9.562A1.94,1.94,0,0,0,32.9385,11.5H45.43L11.5,45.43V32.9385A1.94,1.94,0,0,0,9.562,31.001H3.4365A1.94,1.94,0,0,0,1.499,32.9385l0,28.562a1,1,0,0,0,1,1l28.562,0a1.94,1.94,0,0,0,1.9375-1.9375V54.438a1.94,1.94,0,0,0-1.9375-1.9375H18.57L52.501,18.57l0,12.4912A1.94,1.94,0,0,0,54.438,32.999h6.1255a1.94,1.94,0,0,0,1.9375-1.9375Zm-8,28.562,0-14.9052a1,1,0,0,0-1.7071-.7071L15.4492,52.7935a1,1,0,0,0,.7071,1.707L30.999,54.438v6.063l-27.4995,0,0-27.5,6-.062V47.8438a1,1,0,0,0,1.707.707L48.5508,11.2065a1,1,0,0,0-.707-1.707L33.001,9.562l-.0625-6.063,27.5644,0,.0606,27.4995Z" stroke="black" stroke-width="2" fill="none"/></g></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="18" height="18" x="0px" y="0px"><g data-name="Layer 13"><path d="M62.5005,2.5a1,1,0,0,0-1-1l-28.562,0A1.94,1.94,0,0,0,31.001,3.4365V9.562A1.94,1.94,0,0,0,32.9385,11.5H45.43L11.5,45.43V32.9385A1.94,1.94,0,0,0,9.562,31.001H3.4365A1.94,1.94,0,0,0,1.499,32.9385l0,28.562a1,1,0,0,0,1,1l28.562,0a1.94,1.94,0,0,0,1.9375-1.9375V54.438a1.94,1.94,0,0,0-1.9375-1.9375H18.57L52.501,18.57l0,12.4912A1.94,1.94,0,0,0,54.438,32.999h6.1255a1.94,1.94,0,0,0,1.9375-1.9375Zm-8,28.562,0-14.9052a1,1,0,0,0-1.7071-.7071L15.4492,52.7935a1,1,0,0,0,.7071,1.707L30.999,54.438v6.063l-27.4995,0,0-27.5,6-.062V47.8438a1,1,0,0,0,1.707.707L48.5508,11.2065a1,1,0,0,0-.707-1.707L33.001,9.562l-.0625-6.063,27.5644,0,.0606,27.4995Z" fill="#F5F5F5"/></g></svg>
                 </button>
                 <div class="ge_tooltip_wrapper"><span class="hover_ele_type">Double Headed Arrow</span></div>
             </div>
@@ -111,7 +105,7 @@ export function createToolbar(toolbar,tools = []) {
         <div class="global_editor_button_group event_group_tool separate_section">
             <div class="tool_bar_wrap">
                 <button type="button" class="global_editor_button global_image_annotator_toolbar_click" tabindex="-1" data-id="line">
-                   <svg width="17" height="17" viewBox="0 0 20 20"><path d="M21.7,3.29a1,1,0,0,0-1.419,0L2.29,21.279A1,1,0,1,0,3.709,22.7L21.7,4.709a1,1,0,0,0,0-1.419Z" transform="translate(-1.994 -2.994)" fill="#404040"/></svg>
+                   <svg width="18" height="18" viewBox="0 0 20 20"><path d="M21.7,3.29a1,1,0,0,0-1.419,0L2.29,21.279A1,1,0,1,0,3.709,22.7L21.7,4.709a1,1,0,0,0,0-1.419Z" transform="translate(-1.994 -2.994)"></path></svg>
                 </button>
                 <div class="ge_tooltip_wrapper"><span class="hover_ele_type">Line</span></div>
             </div>
@@ -123,7 +117,7 @@ export function createToolbar(toolbar,tools = []) {
         <div class="global_editor_button_group event_group_tool separate_section">
             <div class="tool_bar_wrap">
                 <button type="button" class="global_editor_button global_image_annotator_toolbar_click" tabindex="-1" data-id="draw">
-                   <svg width="17" height="17" viewBox="0 0 20 20.002"><path d="M144,345.24a1,1,0,0,0-.29-.71l-4.24-4.24a1.014,1.014,0,0,0-1.42,0l-2.83,2.83h0l-10.93,10.93a1,1,0,0,0-.29.71V359a1,1,0,0,0,1,1h4.24a1,1,0,0,0,.76-.29l10.87-10.93h0l2.84-2.78a1.183,1.183,0,0,0,.22-.33.963.963,0,0,0,0-.24.654.654,0,0,0,0-.14ZM128.83,358H126v-2.83l9.93-9.93,2.83,2.83Zm11.34-11.34-2.83-2.83,1.42-1.41,2.82,2.82Z" transform="translate(-124 -340)" fill="#404040"/></svg>
+                  <svg width="18" height="18" viewBox="0 0 20 20.002"><path d="M144,345.24a1,1,0,0,0-.29-.71l-4.24-4.24a1.014,1.014,0,0,0-1.42,0l-2.83,2.83h0l-10.93,10.93a1,1,0,0,0-.29.71V359a1,1,0,0,0,1,1h4.24a1,1,0,0,0,.76-.29l10.87-10.93h0l2.84-2.78a1.183,1.183,0,0,0,.22-.33.963.963,0,0,0,0-.24.654.654,0,0,0,0-.14ZM128.83,358H126v-2.83l9.93-9.93,2.83,2.83Zm11.34-11.34-2.83-2.83,1.42-1.41,2.82,2.82Z" transform="translate(-124 -340)"></path></svg>
                 </button>
                 <div class="ge_tooltip_wrapper"><span class="hover_ele_type">Draw</span></div>
             </div>
@@ -135,7 +129,7 @@ export function createToolbar(toolbar,tools = []) {
         <div class="global_editor_button_group event_group_tool">
             <div class="tool_bar_wrap">
                  <button type="button" class="global_editor_button global_image_annotator_toolbar_click" tabindex="-1" data-id="polygon">
-                   <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 19.31 20"><path id="PenFill" d="M13.606,2.379a2.07,2.07,0,0,0-3.9,0H3.379A.69.69,0,1,0,2,2.379V3.759a.69.69,0,0,0,1.379,0H9.7a2.07,2.07,0,0,0,3.9,0h6.325a.69.69,0,0,0,1.379,0V2.379a.69.69,0,0,0-1.379,0Zm-2.641.69a.69.69,0,1,1,.69.69A.69.69,0,0,1,10.966,3.069Zm.69,2.759a.69.69,0,0,1,.565.294l4.828,6.9a.69.69,0,0,1-.565,1.085H14.414v3.448a.69.69,0,0,1,.69.69V20.31a.69.69,0,0,1-.69.69H8.9a.69.69,0,0,1-.69-.69V18.241a.69.69,0,0,1,.69-.69V14.1H6.828a.69.69,0,0,1-.565-1.085l4.828-6.9A.69.69,0,0,1,11.655,5.828Zm1.379,11.034v.69H10.276v-.69Zm0-1.379V13.414a.69.69,0,0,1,.69-.69h1.434L12.345,8.705v1.95a.69.69,0,1,1-1.379,0V8.705L8.152,12.724H9.586a.69.69,0,0,1,.69.69v2.069ZM9.586,18.931v.69h4.138v-.69Z" transform="translate(-2 -1)" fill="#222222"/></svg>                         
+                   <svg xmlns="http://www.w3.org/2000/svg" width="19.31" height="20" viewBox="0 0 19.31 20"><path id="PenFill" d="M13.606,2.379a2.07,2.07,0,0,0-3.9,0H3.379A.69.69,0,1,0,2,2.379V3.759a.69.69,0,0,0,1.379,0H9.7a2.07,2.07,0,0,0,3.9,0h6.325a.69.69,0,0,0,1.379,0V2.379a.69.69,0,0,0-1.379,0Zm-2.641.69a.69.69,0,1,1,.69.69A.69.69,0,0,1,10.966,3.069Zm.69,2.759a.69.69,0,0,1,.565.294l4.828,6.9a.69.69,0,0,1-.565,1.085H14.414v3.448a.69.69,0,0,1,.69.69V20.31a.69.69,0,0,1-.69.69H8.9a.69.69,0,0,1-.69-.69V18.241a.69.69,0,0,1,.69-.69V14.1H6.828a.69.69,0,0,1-.565-1.085l4.828-6.9A.69.69,0,0,1,11.655,5.828Zm1.379,11.034v.69H10.276v-.69Zm0-1.379V13.414a.69.69,0,0,1,.69-.69h1.434L12.345,8.705v1.95a.69.69,0,1,1-1.379,0V8.705L8.152,12.724H9.586a.69.69,0,0,1,.69.69v2.069ZM9.586,18.931v.69h4.138v-.69Z" transform="translate(-2 -1)" fill="#f5f5f5" fill-rule="evenodd"></path></svg>
                  </button>
                 <div class="ge_tooltip_wrapper"><span class="hover_ele_type">Polygon</span></div>
             </div>
@@ -148,7 +142,7 @@ export function createToolbar(toolbar,tools = []) {
             <div class="tool_bar_wrap">
                 <button type="button" class="global_editor_button global_image_annotator_toolbar_click" tabindex="-1" data-id="blur">
                     <svg width="17" height="17" viewBox="0 0 17.376 20.605">
-                        <path id="Blur" d="M6114.543,75.06a8.687,8.687,0,0,1,0-12.288l5.5-5.509a.9.9,0,0,1,1.272,0l5.51,5.51a8.687,8.687,0,1,1-12.285,12.286Zm1.277-11.014a6.886,6.886,0,1,0,9.736,0l-4.873-4.873Zm3.635,9.554a4.594,4.594,0,0,1-2.539-1.517,4.936,4.936,0,0,1-1-2.184,7.443,7.443,0,0,1-.02-2.684.9.9,0,0,1,1.765.358,5.58,5.58,0,0,0,.029,2.012,2.722,2.722,0,0,0,2.187,2.263.9.9,0,0,1-.21,1.776A.913.913,0,0,1,6119.456,73.6Z" transform="translate(-6112 -57.001)" fill="#222"/>
+                      <svg width="17.376" height="20.605" viewBox="0 0 17.376 20.605"><path id="Blur" d="M6114.543,75.06a8.687,8.687,0,0,1,0-12.288l5.5-5.509a.9.9,0,0,1,1.272,0l5.51,5.51a8.687,8.687,0,1,1-12.285,12.286Zm1.277-11.014a6.886,6.886,0,1,0,9.736,0l-4.873-4.873Zm3.635,9.554a4.594,4.594,0,0,1-2.539-1.517,4.936,4.936,0,0,1-1-2.184,7.443,7.443,0,0,1-.02-2.684.9.9,0,0,1,1.765.358,5.58,5.58,0,0,0,.029,2.012,2.722,2.722,0,0,0,2.187,2.263.9.9,0,0,1-.21,1.776A.913.913,0,0,1,6119.456,73.6Z" transform="translate(-6112 -57.001)" fill="#f5f5f5"></path></svg>
                     </svg>
                 </button>
                 <div class="ge_tooltip_wrapper"><span class="hover_ele_type">Blur</span></div>
@@ -209,6 +203,8 @@ export function createToolbar(toolbar,tools = []) {
     //     </div>`;
     // }
 
-    toolbar.innerHTML = `<div class="global_editor_toolbar_button_pane">${toolbar.innerHTML}</div>`;
+    toolbar.innerHTML = `<div class="global_editor_toolbar_button_pane">
+        ${toolbar.innerHTML}
+    </div>`;
 
 }
