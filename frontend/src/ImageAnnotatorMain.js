@@ -50,6 +50,7 @@ export class ImageAnnotatorEditor {
         }
     }
 
+
     setupEditorAndToolbarOtherFunctions(options){
         // Initialize the Fabric.js canvas
         fabricCanvas = new fabric.Canvas(this.iframeDocument.getElementById('rc_editor_image_canvas'));
@@ -86,7 +87,7 @@ export class ImageAnnotatorEditor {
         }, 0)
     }
 
-
+/////// Create URI using this function /////
     async getAnnotatedImageDataUri() {
         await trimAndReturnCanvasUrl()
     }
@@ -103,6 +104,7 @@ export class ImageAnnotatorEditor {
         });
     }
 
+    ////// Set Image into annotator ///
     setImageIntoImageAnnotator({objectId, imageUrl,userData}) {
 
         if(!objectId){
